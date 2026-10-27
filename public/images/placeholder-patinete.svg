@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 480" width="640" height="480" role="img" aria-label="Ilustración genérica de patinete eléctrico">
+  <defs>
+    <linearGradient id="pbg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fbfaf6"/>
+      <stop offset="1" stop-color="#f1eee4"/>
+    </linearGradient>
+    <linearGradient id="pline" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#d8d2c1"/>
+      <stop offset="1" stop-color="#b9b19c"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="640" height="480" fill="url(#pbg)"/>
+
+  <g stroke="#e4dfd1" stroke-width="1">
+    <path d="M0 120h640M0 240h640M0 360h640"/>
+    <path d="M160 0v480M320 0v480M480 0v480"/>
+  </g>
+
+  <ellipse cx="320" cy="396" rx="190" ry="14" fill="#d8d2c1" opacity="0.6"/>
+
+  <!-- wheels -->
+  <circle cx="196" cy="356" r="44" fill="none" stroke="url(#pline)" stroke-width="10"/>
+  <circle cx="196" cy="356" r="10" fill="#cfc8b5"/>
+  <circle cx="452" cy="356" r="44" fill="none" stroke="url(#pline)" stroke-width="10"/>
+  <circle cx="452" cy="356" r="10" fill="#cfc8b5"/>
+
+  <!-- deck -->
+  <path d="M222 344h196l18 16H206z" fill="#e4dfd1" stroke="#cfc8b5" stroke-width="4" stroke-linejoin="round"/>
+
+  <!-- fork and stem -->
+  <path d="M436 340l18-92" stroke="url(#pline)" stroke-width="11" stroke-linecap="round"/>
+  <path d="M454 248l10-54" stroke="url(#pline)" stroke-width="9" stroke-linecap="round"/>
+  <path d="M464 194H390" stroke="#cfc8b5" stroke-width="12" stroke-linecap="round"/>
+  <path d="M390 194c-12 0-22-7-24-18" fill="none" stroke="url(#pline)" stroke-width="9" stroke-linecap="round"/>
+
+  <!-- display -->
+  <rect x="440" y="170" width="26" height="18" rx="5" fill="#eae6da" stroke="#cfc8b5" stroke-width="3"/>
+
+  <!-- fender -->
+  <path d="M158 346a44 44 0 0 1 66-37" fill="none" stroke="#cfc8b5" stroke-width="7" stroke-linecap="round"/>
+
+  <!-- accent -->
+  <path d="M250 340h140" stroke="#9dbb2f" stroke-width="4" stroke-linecap="round" opacity="0.5"/>
+</svg>

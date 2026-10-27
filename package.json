@@ -1,0 +1,50 @@
+{
+  "name": "patinetes-electricos",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Web editorial de afiliados de Amazon.es especializada en patinetes eléctricos: comparativas, fichas, comparador y guía de compra.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "prebuild": "node scripts/generate-sitemap.mjs",
+    "build": "vite build",
+    "preview": "vite preview",
+    "schema": "node scripts/crear-esquema.mjs --config niche.config.mjs --out supabase/schema.sql",
+    "top20": "node scripts/top20-amazon.mjs --query \"patinete electrico adultos\" --limit 20 --min-rating 4.1 --min-reviews 30 --exclude \"niñ|infantil|adolescent|junior|kids|razor tekno|party pop\" --pages 3 --out datos/patinetes.xlsx",
+    "scrape": "node scripts/scrape-catalogo.mjs --input datos/patinetes.xlsx --config niche.config.mjs",
+    "scrape:sql": "node scripts/scrape-catalogo.mjs --input datos/patinetes.xlsx --config niche.config.mjs --sql",
+    "scrape:push": "node scripts/scrape-catalogo.mjs --input datos/patinetes.xlsx --config niche.config.mjs --push",
+    "verify": "node scripts/verificar-catalogo.mjs --input datos/productos.json --config niche.config.mjs"
+  },
+  "keywords": [
+    "amazon",
+    "afiliados",
+    "patinetes electricos",
+    "comparativas",
+    "react",
+    "vite",
+    "tailwind",
+    "supabase"
+  ],
+  "license": "ISC",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.117.3",
+    "lucide-react": "^1.57.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^7.18.4"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.3",
+    "@vitejs/plugin-react": "^4.0.0",
+    "autoprefixer": "^10.6.1",
+    "postcss": "^8.5.30",
+    "puppeteer": "^25.14.0",
+    "tailwindcss": "^4.3.3",
+    "vite": "^4.3.9",
+    "xlsx": "^0.18.5"
+  }
+}
