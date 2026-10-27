@@ -48,6 +48,10 @@ export function CatalogProvider({ children, fallback = FALLBACK }) {
       setSource("live");
       setStatus("ready");
     } catch (err) {
+      // Pista útil en la consola: casi siempre es falta de VITE_SUPABASE_* en
+      // el build del hosting (Vite las inyecta al compilar, no en runtime).
+      console.warn("[catálogo] Fallo al cargar Supabase:", err?.message || err);
+
       const cached = (fallbackRef.current || []).map(normalizeProduct).filter(Boolean);
       if (cached.length) {
         setProducts(enrichCatalog(cached));

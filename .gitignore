@@ -10,6 +10,8 @@ dist-ssr/
 .env
 .env.*
 !.env.example
+# Config pública del build (solo claves publishable de Supabase)
+!.env.production
 
 # Logs
 npm-debug.log*
