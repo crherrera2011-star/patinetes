@@ -34,7 +34,8 @@ Copia `.env.example` a `.env` y rellena:
 
 1. Entra en Supabase → **SQL Editor**.
 2. Pega y ejecuta el contenido completo de [`supabase/schema.sql`](supabase/schema.sql).
-3. Comprueba que existe la tabla `public.products` con lectura pública (RLS activo).
+3. Ejecuta [`supabase/migrations/001_replace_products.sql`](supabase/migrations/001_replace_products.sql), que crea la función `replace_products` y la tabla de histórico `sync_runs`.
+4. Comprueba que existe la tabla `public.products` con lectura pública (RLS activo).
 
 El esquema es idempotente. Las notas editoriales (`autonomy`, `power`, `safety`, `portability`, `comfort`, `value_for_money`) solo se escriben al insertar: una actualización posterior de precios o specs no las sobrescribe.
 
@@ -60,6 +61,45 @@ npm run verify
 copy datos/productos.json src/data/productos.json
 ```
 
+### Actualización automática semanal
+
+El workflow [`.github/workflows/actualizar-catalogo.yml`](.github/workflows/actualizar-catalogo.yml) actualiza el catálogo de Supabase todos los **lunes a las 05:00 UTC** (07:00 en verano y 06:00 en invierno en España). También se puede lanzar a mano desde la pestaña **Actions** con estas opciones:
+
+- `scrape`: refresca precios, valoraciones, reseñas, imágenes y specs desde Amazon.es.
+- `dry_run`: valida y muestra el resultado sin tocar Supabase.
+- `force`: permite reducir el catálogo o arrancar con una tabla vacía.
+
+Antes del primer uso:
+
+1. Ejecuta [`supabase/migrations/001_replace_products.sql`](supabase/migrations/001_replace_products.sql) en Supabase → SQL Editor.
+2. En GitHub → **Settings → Secrets and variables → Actions**, crea:
+   - `SUPABASE_URL` — URL del proyecto (`https://xxxx.supabase.co`).
+   - `SUPABASE_SERVICE_ROLE_KEY` — clave `service_role`, nunca la anon/publishable.
+   - `AMAZON_ASSOCIATE_TAG` — opcional; si falta se usa el de `niche.config.mjs`.
+3. Lanza el workflow a mano una vez con `dry_run` activado para comprobar credenciales y scraping.
+
+Qué hace el script [`scripts/actualizar-catalogo.mjs`](scripts/actualizar-catalogo.mjs):
+
+- Reutiliza el scraper del proyecto para leer las URLs de `datos/patinetes.xlsx`.
+- Conserva las notas editoriales, etiquetas, textos, badges y el `created_at` que ya existen en Supabase; solo actualiza los datos volátiles.
+- Si Amazon falla en un producto, mantiene sus datos actuales en lugar de borrarlo.
+- Valida el resultado antes de escribir: mínimo de productos, sin duplicados y con nombre y URL de afiliado.
+- Llama a `replace_products`, que borra e inserta todo el catálogo en **una sola transacción**.
+- Guarda copias en `datos/catalogo.anterior.json` y `datos/catalogo.actualizado.json`, y el log en `datos/ultima-actualizacion.log` (también queda como artifact en GitHub Actions).
+- Registra cada ejecución en `public.sync_runs` (estado, filas insertadas y errores), consultable solo con la clave `service_role`.
+
+Salvaguardas: si no se refresca ningún producto, si el catálogo baja del mínimo (`MIN_PRODUCTS`, por defecto 8) o se reduce a menos de la mitad, la ejecución falla sin tocar Supabase salvo que se use `force`.
+
+Comandos locales equivalentes:
+
+```bash
+npm run catalogo:update    # scrapea y reemplaza el catálogo en Supabase
+npm run catalogo:dry-run   # scrapea y valida sin escribir
+npm run catalogo:test      # prueba con 2 productos, sin Supabase
+npm run catalogo:offline   # valida el catálogo local sin conectar
+npm run catalogo:export    # exporta el catálogo actual de Supabase a JSON
+```
+
 ### Añadir o actualizar productos
 
 1. Añade las URLs a `datos/patinetes.xlsx` (columna `url`) o edita el Excel existente.
@@ -80,6 +120,11 @@ copy datos/productos.json src/data/productos.json
 | `npm run scrape:sql` | Scrapea y genera SQL |
 | `npm run scrape:push` | Scrapea y sube a Supabase (service role) |
 | `npm run verify` | Valida el catálogo |
+| `npm run catalogo:update` | Scrapea y reemplaza el catálogo completo en Supabase |
+| `npm run catalogo:dry-run` | Igual que `catalogo:update` pero sin escribir |
+| `npm run catalogo:test` | Prueba con 2 productos, sin Supabase |
+| `npm run catalogo:offline` | Valida el catálogo local sin conectar |
+| `npm run catalogo:export` | Exporta el catálogo actual de Supabase a JSON |
 
 ## Rutas
 
@@ -125,15 +170,23 @@ src/
 scripts/
   top20-amazon.mjs        Búsqueda del top 20
   scrape-catalogo.mjs     Scraper y generación de SQL
+  actualizar-catalogo.mjs Actualización semanal y reemplazo atómico
   verificar-catalogo.mjs  Validación del catálogo
   generar-sitemap.mjs     Sitemap en build
   crear-esquema.mjs       Esquema SQL
 supabase/
   schema.sql              Tabla products + RLS
   insert-productos.sql    Datos generados por el scraper
+  migrations/
+    001_replace_products.sql  RPC de reemplazo + histórico
 datos/
   patinetes.xlsx          URLs de partida
   productos.json          Snapshot scrapeado
+  catalogo.actualizado.json  Último catálogo validado
+  catalogo.anterior.json     Copia previa a cada actualización
+  ultima-actualizacion.log   Log de la última ejecución
+.github/workflows/
+  actualizar-catalogo.yml Actualización semanal programada
 ```
 
 ## Notas editoriales

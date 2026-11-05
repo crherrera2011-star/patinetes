@@ -1,0 +1,139 @@
+name: Actualizar catálogo de patinetes
+
+# Se ejecuta todos los lunes a las 05:00 UTC (07:00 en verano y 06:00 en
+# invierno en España) y también se puede lanzar a mano desde Actions.
+#
+# Requisitos (Settings → Secrets and variables → Actions):
+#   SUPABASE_URL               URL del proyecto, p. ej. https://xxxx.supabase.co
+#   SUPABASE_SERVICE_ROLE_KEY  Clave service_role (nunca la anon/publishable)
+#   AMAZON_ASSOCIATE_TAG       Opcional, p. ej. netcarmoncafe-21
+#
+# Antes del primer uso hay que ejecutar en Supabase → SQL Editor:
+#   supabase/schema.sql
+#   supabase/migrations/001_replace_products.sql
+
+on:
+  schedule:
+    - cron: '0 5 * * 1'
+  workflow_dispatch:
+    inputs:
+      scrape:
+        description: 'Refrescar precios, valoraciones, imágenes y specs desde Amazon'
+        required: false
+        default: true
+        type: boolean
+      dry_run:
+        description: 'Simular sin borrar ni insertar en Supabase'
+        required: false
+        default: false
+        type: boolean
+      force:
+        description: 'Permitir reducir el catálogo o arrancar con una tabla vacía'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: actualizar-catalogo-products
+  cancel-in-progress: false
+
+jobs:
+  actualizar:
+    name: Reemplazar catálogo
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    env:
+      MIN_PRODUCTS: '8'
+      TZ: Europe/Madrid
+      # Chrome que descarga Puppeteer en `npm ci`; se cachea entre ejecuciones.
+      PUPPETEER_CACHE_DIR: ${{ github.workspace }}/.cache/puppeteer
+
+    steps:
+      - name: Descargar repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Cachear Chrome de Puppeteer
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.PUPPETEER_CACHE_DIR }}
+          key: ${{ runner.os }}-puppeteer-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-puppeteer-
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Comprobar credenciales
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          missing=0
+          if [ -z "$SUPABASE_URL" ]; then
+            echo "::error::Falta el secret SUPABASE_URL (Settings → Secrets and variables → Actions)."
+            missing=1
+          fi
+          if [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
+            echo "::error::Falta el secret SUPABASE_SERVICE_ROLE_KEY."
+            missing=1
+          fi
+          exit $missing
+
+      - name: Actualizar catálogo
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          AMAZON_ASSOCIATE_TAG: ${{ secrets.AMAZON_ASSOCIATE_TAG }}
+          SCRAPE: ${{ github.event_name != 'workflow_dispatch' || inputs.scrape }}
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
+          FORCE: ${{ github.event_name == 'workflow_dispatch' && inputs.force }}
+        run: |
+          args=(--input datos/patinetes.xlsx)
+          if [ "$SCRAPE" = "true" ]; then
+            args+=(--scrape)
+          else
+            args+=(--no-scrape)
+          fi
+          if [ "$DRY_RUN" = "true" ]; then
+            args+=(--dry-run)
+          fi
+          if [ "$FORCE" = "true" ]; then
+            args+=(--force)
+          fi
+          node scripts/actualizar-catalogo.mjs "${args[@]}"
+
+      - name: Publicar copias y log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: catalogo-${{ github.run_id }}
+          path: |
+            datos/catalogo.actualizado.json
+            datos/catalogo.anterior.json
+            datos/scrape-semanal/productos.json
+            datos/ultima-actualizacion.log
+          if-no-files-found: ignore
+          retention-days: 30
+
+      - name: Resumen de la ejecución
+        if: always()
+        run: |
+          if [ -f datos/ultima-actualizacion.log ]; then
+            {
+              echo "## Actualización del catálogo"
+              echo ""
+              echo '```'
+              tail -n 50 datos/ultima-actualizacion.log
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
