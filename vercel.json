@@ -1,15 +1,27 @@
 {
-  "redirects": [
-    {
-      "source": "/sitemap.xml",
-      "destination": "/sitemap-patinetes.xml",
-      "permanent": false
-    }
-  ],
   "rewrites": [
+    {
+      "source": "/sitemap-patinetes.xml",
+      "destination": "/sitemap-patinetes.xml"
+    },
     {
       "source": "/(.*)",
       "destination": "/index.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/sitemap-patinetes.xml",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/xml; charset=utf-8"
+        },
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex"
+        }
+      ]
     }
   ]
 }
