@@ -101,45 +101,34 @@ const slugKey = (value) =>
 
 function parsePrice(text) {
   // Amazon cambia el formato según el idioma/layout: "1.599,00 €", "479,99 €",
-  // "479.99 €" e incluso "479 99 €" (espacio como separador decimal).
-  // Se normaliza todo a un número con punto decimal antes de parsear.
+  // "479.99 €", "1.599 00 €" o "479 99 €". El espacio puede ser separador de
+  // miles o decimal, así que se normaliza antes de interpretar coma/punto.
   let raw = cleanText(text).replace(/[^\d.,\s]/g, " ").trim();
   if (!raw) return 0;
   raw = raw.replace(/\s+/g, " ");
 
-  const hasComma = raw.includes(",");
-  const hasDot = raw.includes(".");
-  if (!hasComma && !hasDot) {
-    // Sin coma ni punto: si el último grupo tiene 1-2 dígitos, el espacio
-    // separa los decimales ("479 99" → 479.99); si no, es separador de miles.
-    const parts = raw.split(" ");
-    if (parts.length > 1 && /^\d{1,2}$/.test(parts[parts.length - 1])) {
-      const decimals = parts.pop();
-      raw = `${parts.join("")}.${decimals}`;
-    } else {
-      raw = parts.join("");
-    }
-  } else {
-    raw = raw.replace(/\s+/g, "");
+  // "479 99" o "1.599 00": si el último grupo tiene 1-2 dígitos, el espacio
+  // final es el separador decimal.
+  if (/\d\s+\d{1,2}$/.test(raw)) {
+    raw = raw.replace(/\s+(\d{1,2})$/, ".$1");
   }
-  if (!raw) return 0;
+  raw = raw.replace(/\s+/g, "");
 
+  // El separador decimal es el punto o la coma que aparezca más a la derecha.
+  // Si después quedan 1-2 dígitos, es decimal; si quedan 3, son miles.
   const lastComma = raw.lastIndexOf(",");
   const lastDot = raw.lastIndexOf(".");
-  if (lastComma >= 0 && lastDot >= 0) {
-    // El separador que aparece más a la derecha es el decimal.
-    raw =
-      lastComma > lastDot
-        ? raw.replace(/\./g, "").replace(",", ".")
-        : raw.replace(/,/g, "");
-  } else if (lastComma >= 0) {
-    const decimals = raw.slice(lastComma + 1);
-    // "1,599" son miles; "479,99" son decimales.
-    raw = decimals.length === 3 && raw.length > 4 ? raw.replace(/,/g, "") : raw.replace(",", ".");
-  } else if (lastDot >= 0) {
-    const decimals = raw.slice(lastDot + 1);
-    // "1.599" son miles; "479.99" son decimales.
-    if (decimals.length === 3 && raw.length > 4) raw = raw.replace(/\./g, "");
+  const decimalIndex = Math.max(lastComma, lastDot);
+  if (decimalIndex >= 0) {
+    const decimals = raw.slice(decimalIndex + 1).replace(/\D/g, "");
+    if (decimals.length > 0 && decimals.length <= 2) {
+      const integer = raw.slice(0, decimalIndex).replace(/[.,]/g, "");
+      raw = `${integer}.${decimals}`;
+    } else {
+      raw = raw.replace(/[.,]/g, "");
+    }
+  } else {
+    raw = raw.replace(/[.,]/g, "");
   }
 
   const value = Number.parseFloat(raw);
