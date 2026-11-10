@@ -462,14 +462,27 @@ async function scrapeProduct(page, url, aliasMap, amazonTag, host, config) {
     .waitForFunction(
       () => {
         const selectors = [
-          "#corePrice_feature_div .a-price .a-offscreen",
-          "#corePriceDisplay_desktop_feature_div .a-price .a-offscreen",
-          "#tp_price_block_total_price_ww .a-offscreen",
+          "#corePrice_feature_div .a-price",
+          "#corePriceDisplay_desktop_feature_div .a-price",
+          "#apex_desktop .a-price",
+          "#tp_price_block_total_price_ww",
+          "#price_inside_buybox",
+          "#newBuyBoxPrice",
           "#priceblock_ourprice",
-          ".a-price .a-offscreen",
+          "#priceblock_dealprice",
+          "#priceblock_saleprice",
+          "#buybox .a-price",
+          "#desktop_buybox .a-price",
         ];
         return selectors.some((selector) => {
-          const text = document.querySelector(selector)?.textContent || "";
+          const node = document.querySelector(selector);
+          if (!node) return false;
+          const text = (
+            node.querySelector(".a-price-whole")?.textContent ||
+            node.querySelector(".a-offscreen")?.textContent ||
+            node.textContent ||
+            ""
+          ).toString();
           return /\d/.test(text);
         });
       },
@@ -509,15 +522,47 @@ async function scrapeProduct(page, url, aliasMap, amazonTag, host, config) {
       .trim();
 
     const priceText = (() => {
+      // Solo contenedores del precio principal (buybox). El antiguo fallback
+      // a `.a-price .a-offscreen` cogía precios de productos relacionados en
+      // fichas no disponibles, y publicaba cosas como 1,30 € o 47.999 €.
       const selectors = [
-        "#corePrice_feature_div .a-price .a-offscreen",
-        "#corePriceDisplay_desktop_feature_div .a-price .a-offscreen",
+        "#corePrice_feature_div .a-price:not(.a-text-price)",
+        "#corePriceDisplay_desktop_feature_div .a-price:not(.a-text-price)",
+        "#apex_desktop .a-price:not(.a-text-price)",
+        "#tp_price_block_total_price_ww",
+        "#price_inside_buybox",
+        "#newBuyBoxPrice",
         "#priceblock_ourprice",
-        "#tp_price_block_total_price_ww .a-offscreen",
-        ".a-price .a-offscreen",
+        "#priceblock_dealprice",
+        "#priceblock_saleprice",
+        "#buybox .a-price:not(.a-text-price)",
+        "#desktop_buybox .a-price:not(.a-text-price)",
       ];
+      const readPrice = (node) => {
+        const whole = clean(node.querySelector(".a-price-whole")?.textContent).replace(
+          /[^\d.,]/g,
+          ""
+        );
+        const fraction = clean(node.querySelector(".a-price-fraction")?.textContent).replace(
+          /\D/g,
+          ""
+        );
+        if (/\d/.test(whole)) {
+          if (/\d/.test(fraction)) {
+            return `${whole.replace(/[.,]$/, "")},${fraction}`;
+          }
+          return whole;
+        }
+        const offscreen = clean(node.querySelector(".a-offscreen")?.textContent);
+        if (/\d/.test(offscreen)) return offscreen;
+        const text = clean(node.textContent);
+        return /\d/.test(text) ? text : "";
+      };
+
       for (const selector of selectors) {
-        const text = clean(document.querySelector(selector)?.textContent);
+        const node = document.querySelector(selector);
+        if (!node) continue;
+        const text = readPrice(node);
         if (/\d/.test(text)) return text;
       }
       return "";
