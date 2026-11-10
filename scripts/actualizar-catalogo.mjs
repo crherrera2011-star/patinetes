@@ -410,7 +410,20 @@ function mergeRow({ baseline, scraped, url, asin, tag, domain, scoreColumns, now
 
   const scrapedPrice = toNumber(scraped?.price);
   const baselinePrice = toNumber(baseline?.price);
-  const price = scrapedPrice > 0 ? scrapedPrice : baselinePrice;
+  // Un selector de Amazon puede devolver el precio de un accesorio, un envío
+  // o una cuota. Si el precio nuevo se aleja demasiado del que ya teníamos,
+  // se conserva el anterior en vez de publicar un dato absurdo.
+  const priceIsPlausible =
+    scrapedPrice > 0 &&
+    (baselinePrice <= 0 ||
+      (scrapedPrice >= baselinePrice * 0.2 && scrapedPrice <= baselinePrice * 5));
+  const price = priceIsPlausible ? scrapedPrice : baselinePrice;
+  if (scrapedPrice > 0 && !priceIsPlausible) {
+    log(
+      "warn",
+      `Precio descartado para ${asin}: ${scrapedPrice} € frente a ${baselinePrice} € actuales; se conserva el anterior.`
+    );
+  }
   const slugBase = slugify(name).slice(0, 70);
 
   const row = {

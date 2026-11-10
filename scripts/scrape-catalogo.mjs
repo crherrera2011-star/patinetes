@@ -100,10 +100,49 @@ const slugKey = (value) =>
     .replace(/^_+|_+$/g, "");
 
 function parsePrice(text) {
-  const raw = cleanText(text).replace(/[^\d.,]/g, "");
+  // Amazon cambia el formato según el idioma/layout: "1.599,00 €", "479,99 €",
+  // "479.99 €" e incluso "479 99 €" (espacio como separador decimal).
+  // Se normaliza todo a un número con punto decimal antes de parsear.
+  let raw = cleanText(text).replace(/[^\d.,\s]/g, " ").trim();
   if (!raw) return 0;
-  const normalized = raw.replace(/\.(?=\d{3}(\D|$))/g, "").replace(",", ".");
-  const value = Number.parseFloat(normalized);
+  raw = raw.replace(/\s+/g, " ");
+
+  const hasComma = raw.includes(",");
+  const hasDot = raw.includes(".");
+  if (!hasComma && !hasDot) {
+    // Sin coma ni punto: si el último grupo tiene 1-2 dígitos, el espacio
+    // separa los decimales ("479 99" → 479.99); si no, es separador de miles.
+    const parts = raw.split(" ");
+    if (parts.length > 1 && /^\d{1,2}$/.test(parts[parts.length - 1])) {
+      const decimals = parts.pop();
+      raw = `${parts.join("")}.${decimals}`;
+    } else {
+      raw = parts.join("");
+    }
+  } else {
+    raw = raw.replace(/\s+/g, "");
+  }
+  if (!raw) return 0;
+
+  const lastComma = raw.lastIndexOf(",");
+  const lastDot = raw.lastIndexOf(".");
+  if (lastComma >= 0 && lastDot >= 0) {
+    // El separador que aparece más a la derecha es el decimal.
+    raw =
+      lastComma > lastDot
+        ? raw.replace(/\./g, "").replace(",", ".")
+        : raw.replace(/,/g, "");
+  } else if (lastComma >= 0) {
+    const decimals = raw.slice(lastComma + 1);
+    // "1,599" son miles; "479,99" son decimales.
+    raw = decimals.length === 3 && raw.length > 4 ? raw.replace(/,/g, "") : raw.replace(",", ".");
+  } else if (lastDot >= 0) {
+    const decimals = raw.slice(lastDot + 1);
+    // "1.599" son miles; "479.99" son decimales.
+    if (decimals.length === 3 && raw.length > 4) raw = raw.replace(/\./g, "");
+  }
+
+  const value = Number.parseFloat(raw);
   return Number.isFinite(value) && value > 0 ? Math.round(value * 100) / 100 : 0;
 }
 
