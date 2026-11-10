@@ -97,7 +97,9 @@ BEGIN
   END IF;
 
   -- Borrado e inserción dentro de la misma transacción de la función.
-  DELETE FROM public.products;
+  -- El WHERE true es obligatorio: Supabase carga pg_safeupdate, que rechaza
+  -- cualquier DELETE sin cláusula WHERE (error 21000, "DELETE requires a WHERE clause").
+  DELETE FROM public.products WHERE true;
 
   INSERT INTO public.products (
     id, asin, name, slug, brand, model, price, currency, rating,
