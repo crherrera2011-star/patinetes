@@ -12,21 +12,27 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 
 const ROOT = process.cwd();
+// Variables definidas por el entorno (Vercel, CI) mandan sobre los archivos.
+const PRESET_ENV = new Set(Object.keys(process.env));
 
-async function loadEnvFile() {
-  const envPath = path.join(ROOT, ".env");
+async function loadEnvFile(fileName) {
+  const envPath = path.join(ROOT, fileName);
   if (!existsSync(envPath)) return;
   const content = await readFile(envPath, "utf8");
   for (const line of content.split(/\r?\n/)) {
     const match = line.match(/^\s*([\w.]+)\s*=\s*(.*)\s*$/);
     if (!match) continue;
     const [, key, rawValue] = match;
-    if (process.env[key] !== undefined) continue;
+    if (PRESET_ENV.has(key)) continue;
     process.env[key] = rawValue.replace(/^["']|["']$/g, "");
   }
 }
 
-await loadEnvFile();
+// Mismo orden que Vite: el último archivo gana. `.env` no está en el repo, así
+// que en Vercel el sitemap salía del snapshot local (sin `updated_at`).
+for (const file of [".env", ".env.local", ".env.production"]) {
+  await loadEnvFile(file);
+}
 
 const configPath = path.join(ROOT, "niche.config.mjs");
 if (!existsSync(configPath)) {

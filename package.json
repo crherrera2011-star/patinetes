@@ -44,11 +44,13 @@
     "react-router-dom": "^7.18.4"
   },
   "devDependencies": {
+    "@sparticuz/chromium": "^153.0.0",
     "@tailwindcss/postcss": "^4.3.3",
     "@vitejs/plugin-react": "^4.0.0",
     "autoprefixer": "^10.6.1",
     "postcss": "^8.5.30",
     "puppeteer": "^25.14.0",
+    "puppeteer-core": "^25.17.0",
     "tailwindcss": "^4.3.3",
     "vite": "^4.3.9",
     "xlsx": "^0.18.5"

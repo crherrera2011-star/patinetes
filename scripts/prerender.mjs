@@ -14,8 +14,10 @@
  * Con `cleanUrls: true` en vercel.json, Vercel sirve `/patinetes` desde
  * `patinetes.html` y las rutas inexistentes caen en el 404 real.
  *
- * Si Chrome no arranca (build sin binario) o una ruta falla, se copia el shell
- * original para no romper el despliegue: la web sigue funcionando como SPA.
+ * Si Chrome no arranca, se prueban dos vías: el Chrome que descarga `puppeteer`
+ * (local) y el Chromium que viaja dentro de `@sparticuz/chromium` (Vercel,
+ * Amazon Linux). Si ambas fallan, se copia el shell original para no romper el
+ * despliegue: la web sigue funcionando como SPA.
  */
 import { createServer } from "node:http";
 import { readFile, writeFile, mkdir } from "node:fs/promises";
@@ -27,6 +29,7 @@ const DIST = path.join(ROOT, "dist");
 const PORT = Number(process.env.PRERENDER_PORT || 4599);
 const BASE_URL = `http://127.0.0.1:${PORT}`;
 const NAV_TIMEOUT = Number(process.env.PRERENDER_TIMEOUT || 30000);
+const BROWSER_ARGS = ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"];
 
 if (process.env.PRERENDER_DISABLED === "1") {
   console.log("Prerender: desactivado por PRERENDER_DISABLED=1.");
@@ -99,11 +102,7 @@ async function main() {
   const results = [];
 
   try {
-    const { default: puppeteer } = await import("puppeteer");
-    browser = await puppeteer.launch({
-      headless: true,
-      args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"],
-    });
+    browser = await launchBrowser();
 
     const routes = await readRoutes();
     console.log(`Prerender: ${routes.length} rutas en ${BASE_URL}`);
@@ -133,6 +132,47 @@ async function main() {
     console.warn(`Prerender: ${failed.length} ruta(s) sin HTML propio (usarán el shell SPA).`);
   }
   console.log(`Prerender: ${written}/${results.length} páginas escritas.`);
+}
+
+async function launchBrowser() {
+  // En Linux (Vercel) se prefiere el Chromium empaquetado: el build no ejecuta
+  // la descarga de `puppeteer`, así que su binario no existe.
+  const strategies =
+    process.platform === "linux"
+      ? [launchWithServerlessChromium, launchWithBundledChrome]
+      : [launchWithBundledChrome, launchWithServerlessChromium];
+
+  const errors = [];
+  for (const strategy of strategies) {
+    try {
+      const browser = await strategy();
+      console.log(`Prerender: navegador listo (${strategy.name}).`);
+      return browser;
+    } catch (error) {
+      errors.push(`${strategy.name}: ${error?.message || error}`);
+    }
+  }
+  throw new Error(errors.join(" | "));
+}
+
+async function launchWithBundledChrome() {
+  const { default: puppeteer } = await import("puppeteer");
+  return puppeteer.launch({ headless: true, args: BROWSER_ARGS });
+}
+
+async function launchWithServerlessChromium() {
+  const [{ default: chromium }, { default: puppeteer }] = await Promise.all([
+    import("@sparticuz/chromium"),
+    import("puppeteer-core"),
+  ]);
+  return puppeteer.launch({
+    // `--single-process` viene por defecto en @sparticuz/chromium y hace que
+    // Chrome se caiga al abrir varias pestañas; aquí se renderiza en serie.
+    args: [...chromium.args.filter((arg) => arg !== "--single-process"), ...BROWSER_ARGS],
+    executablePath: await chromium.executablePath(),
+    headless: true,
+    defaultViewport: { width: 1280, height: 900 },
+  });
 }
 
 async function readRoutes() {
