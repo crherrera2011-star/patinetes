@@ -17,7 +17,7 @@ export default {
     tagline: "Guía independiente · 2026",
     description:
       "Comparativas independientes de patinetes eléctricos: autonomía real, potencia, frenos, peso y precio. Sin marketing.",
-    url: "https://patinetes-electricos.es",
+    url: "https://toppatinetes.com",
     email: "hola@patinetes-electricos.es",
     amazonTag: "netcarmoncafe-21",
     amazonDomain: "www.amazon.es",

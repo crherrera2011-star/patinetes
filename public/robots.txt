@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://patinetes-electricos.es/sitemap.xml
+Sitemap: https://toppatinetes.com/sitemap.xml

@@ -5,7 +5,7 @@ Web editorial de afiliados de Amazon.es especializada en patinetes eléctricos. 
 - **Stack:** React 18 + Vite 4 + Tailwind CSS 4 + Supabase (opcional, con fallback local).
 - **Nicho:** patinetes eléctricos para adultos.
 - **Afiliado:** `netcarmoncafe-21` (Amazon.es).
-- **Producción:** `https://patinetes-electricos.es`.
+- **Producción:** `https://toppatinetes.com`.
 
 ## Arranque rápido
 
@@ -112,7 +112,7 @@ npm run catalogo:export    # exporta el catálogo actual de Supabase a JSON
 | Comando | Qué hace |
 | --- | --- |
 | `npm run dev` | Servidor de desarrollo |
-| `npm run build` | Genera el sitemap y compila a `dist/` |
+| `npm run build` | Genera el sitemap, compila y prerenderiza las rutas a `dist/` |
 | `npm run preview` | Sirve la build localmente |
 | `npm run schema` | Regenera `supabase/schema.sql` desde `niche.config.mjs` |
 | `npm run top20` | Busca el top 20 en Amazon.es |
@@ -143,19 +143,34 @@ npm run catalogo:export    # exporta el catálogo actual de Supabase a JSON
 - Metadatos por ruta (título, descripción, canónica, Open Graph) en `src/lib/seo.js`.
 - JSON-LD de producto y `BreadcrumbList` en las fichas.
 - `sitemap.xml` generado en cada build desde Supabase o desde el snapshot local.
+- Prerender con Chrome headless (`scripts/prerender.mjs`): cada ruta del sitemap se
+  guarda como HTML estático (`letra.html`), así Google recibe el contenido sin
+  ejecutar JavaScript y las URLs inexistentes devuelven un 404 real.
 - Divulgación de afiliación visible en cabecera, fichas y pie de página.
 - Navegación por teclado, foco visible, `aria-label` en controles y contraste revisado.
 - Diseño probado a 390 px sin scroll horizontal.
 
 ## Despliegue
 
-La build es estática:
+La build es estática y prerenderizada:
 
 ```bash
 npm run build
 ```
 
-Sube el contenido de `dist/` a Hostinger (o cualquier hosting estático). Configura una regla de reescritura hacia `index.html` para que las rutas de React Router funcionen al recargar.
+Genera en `dist/` un `.html` por ruta (`index.html`, `patinetes.html`,
+`producto/<asin>.html`, `404.html`) más `sitemap.xml` y `robots.txt`. Sube el
+contenido de `dist/` al hosting.
+
+- **Vercel**: `vercel.json` ya activa `cleanUrls` (sirve `/patinetes` desde
+  `patinetes.html`), redirige `/maquinas/:id` → `/producto/:id` con 301 y deja
+  que las rutas inexistentes caigan en `404.html`.
+- **Apache/Hostinger**: `public/.htaccess` mapea `/ruta` → `/ruta.html` y usa
+  `index.html` como último recurso.
+
+Si Chrome no arranca en el build (por ejemplo, en un contenedor sin librerías),
+`prerender.mjs` avisa y copia el shell SPA en cada ruta: la web sigue
+funcionando, solo pierde el HTML estático.
 
 ## Estructura
 
@@ -172,7 +187,8 @@ scripts/
   scrape-catalogo.mjs     Scraper y generación de SQL
   actualizar-catalogo.mjs Actualización semanal y reemplazo atómico
   verificar-catalogo.mjs  Validación del catálogo
-  generar-sitemap.mjs     Sitemap en build
+  generate-sitemap.mjs    Sitemap en build
+  prerender.mjs           HTML estático por ruta (Chrome headless)
   crear-esquema.mjs       Esquema SQL
 supabase/
   schema.sql              Tabla products + RLS

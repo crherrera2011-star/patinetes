@@ -6,6 +6,9 @@ dist/
 dist-ssr/
 *.local
 
+# Sitemap generado en cada build (scripts/generate-sitemap.mjs)
+public/sitemap.xml
+
 # Environment
 .env
 .env.*

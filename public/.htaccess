@@ -1,18 +1,29 @@
-# SPA fallback for Apache hosting (Hostinger, cPanel…)
+# Hosting Apache (Hostinger, cPanel…). En Vercel manda vercel.json.
+Options -MultiViews -Indexes
+
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
-  RewriteRule ^index\.html$ - [L]
+
+  # /patinetes -> /patinetes.html (archivos creados por scripts/prerender.mjs)
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteCond %{REQUEST_FILENAME}.html -f
+  RewriteRule ^(.*?)/?$ $1.html [L]
+
+  # Resto de rutas: SPA (por si el prerender no generó el archivo).
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
   RewriteRule . /index.html [L]
 </IfModule>
 
+ErrorDocument 404 /404.html
+
 <IfModule mod_headers.c>
   <FilesMatch "\.(js|css|svg|jpg|jpeg|png|webp|woff2)$">
     Header set Cache-Control "public, max-age=31536000, immutable"
   </FilesMatch>
-  <FilesMatch "index\.html$">
+  <FilesMatch "\.html$">
     Header set Cache-Control "no-cache, must-revalidate"
   </FilesMatch>
 </IfModule>

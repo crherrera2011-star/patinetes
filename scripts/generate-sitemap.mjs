@@ -56,11 +56,14 @@ if (missing.length) {
 }
 
 const STATIC_ROUTES = [
-  { path: "/", priority: "1.0", changefreq: "weekly" },
-  { path: `/${CATEGORY_SLUG}`, priority: "0.9", changefreq: "weekly" },
-  { path: "/comparador", priority: "0.6", changefreq: "monthly" },
-  { path: "/categorias", priority: "0.7", changefreq: "monthly" },
-  { path: "/ofertas", priority: "0.7", changefreq: "weekly" },
+  // `catalog: true` = la página cambia cuando cambia el catálogo, así que su
+  // lastmod sale del producto más reciente. Las demás no llevan lastmod: Google
+  // desconfía si cambia en cada build sin que cambie el contenido.
+  { path: "/", priority: "1.0", changefreq: "weekly", catalog: true },
+  { path: `/${CATEGORY_SLUG}`, priority: "0.9", changefreq: "weekly", catalog: true },
+  { path: "/comparador", priority: "0.6", changefreq: "monthly", catalog: true },
+  { path: "/categorias", priority: "0.7", changefreq: "monthly", catalog: true },
+  { path: "/ofertas", priority: "0.7", changefreq: "weekly", catalog: true },
   { path: "/guia-2026", priority: "0.8", changefreq: "monthly" },
   { path: "/aviso-legal", priority: "0.2", changefreq: "yearly" },
 ];
@@ -119,7 +122,6 @@ function urlEntry({ path: routePath, lastmod, priority = "0.6", changefreq = "mo
 }
 
 async function main() {
-  const today = new Date().toISOString().slice(0, 10);
   let products = [];
   let source = "Supabase";
 
@@ -138,22 +140,28 @@ async function main() {
 
   const seen = new Set();
   const productEntries = [];
+  const updatedDates = [];
   for (const product of products) {
     const id = product.id || product.asin;
     if (!id || seen.has(id)) continue;
     seen.add(id);
+    const lastmod = product.updated_at ? String(product.updated_at).slice(0, 10) : "";
+    if (lastmod) updatedDates.push(lastmod);
     productEntries.push(
       urlEntry({
         path: `/producto/${encodeURIComponent(id)}`,
-        lastmod: product.updated_at ? String(product.updated_at).slice(0, 10) : today,
+        lastmod,
         priority: "0.8",
         changefreq: "weekly",
       })
     );
   }
 
+  const catalogUpdated = updatedDates.sort().at(-1) || "";
   const entries = [
-    ...STATIC_ROUTES.map((route) => urlEntry({ ...route, lastmod: today })),
+    ...STATIC_ROUTES.map((route) =>
+      urlEntry({ ...route, lastmod: route.catalog ? catalogUpdated : "" })
+    ),
     ...productEntries,
   ];
 
