@@ -112,6 +112,17 @@ jobs:
           fi
           node scripts/actualizar-catalogo.mjs "${args[@]}"
 
+      - name: Reconstruir la web con el catálogo nuevo
+        if: success() && (github.event_name != 'workflow_dispatch' || inputs.dry_run == false)
+        env:
+          DEPLOY_HOOK: ${{ secrets.VERCEL_DEPLOY_HOOK }}
+        run: |
+          if [ -z "$DEPLOY_HOOK" ]; then
+            echo "::warning::Falta el secret VERCEL_DEPLOY_HOOK; el HTML prerenderizado seguirá con los precios anteriores."
+            exit 0
+          fi
+          curl -fsS -X POST "$DEPLOY_HOOK" -o /dev/null -w "Deploy hook Vercel: %{http_code}\n"
+
       - name: Publicar copias y log
         if: always()
         uses: actions/upload-artifact@v4

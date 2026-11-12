@@ -9,6 +9,7 @@
     "prebuild": "node scripts/generate-sitemap.mjs",
     "build": "vite build && node scripts/prerender.mjs",
     "prerender": "node scripts/prerender.mjs",
+    "og:image": "node scripts/generate-og-image.mjs",
     "preview": "vite preview",
     "schema": "node scripts/crear-esquema.mjs --config niche.config.mjs --out supabase/schema.sql",
     "top20": "node scripts/top20-amazon.mjs --query \"patinete electrico adultos\" --limit 20 --min-rating 4.1 --min-reviews 30 --exclude \"niñ|infantil|adolescent|junior|kids|razor tekno|party pop\" --pages 3 --out datos/patinetes.xlsx",

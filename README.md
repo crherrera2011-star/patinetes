@@ -76,6 +76,9 @@ Antes del primer uso:
    - `SUPABASE_URL` — URL del proyecto (`https://xxxx.supabase.co`).
    - `SUPABASE_SERVICE_ROLE_KEY` — clave `service_role`, nunca la anon/publishable.
    - `AMAZON_ASSOCIATE_TAG` — opcional; si falta se usa el de `niche.config.mjs`.
+   - `VERCEL_DEPLOY_HOOK` — opcional pero recomendado: URL del *Deploy Hook* de Vercel
+     (Vercel → proyecto → **Settings → Git → Deploy Hooks**, rama `main`). Sin él, el
+     HTML prerenderizado se queda con los precios anteriores hasta el siguiente push.
 3. Lanza el workflow a mano una vez con `dry_run` activado para comprobar credenciales y scraping.
 
 Qué hace el script [`scripts/actualizar-catalogo.mjs`](scripts/actualizar-catalogo.mjs):
@@ -114,6 +117,7 @@ npm run catalogo:export    # exporta el catálogo actual de Supabase a JSON
 | `npm run dev` | Servidor de desarrollo |
 | `npm run build` | Genera el sitemap, compila y prerenderiza las rutas a `dist/` |
 | `npm run preview` | Sirve la build localmente |
+| `npm run og:image` | Regenera `public/images/og-default.png` (1200×630) |
 | `npm run schema` | Regenera `supabase/schema.sql` desde `niche.config.mjs` |
 | `npm run top20` | Busca el top 20 en Amazon.es |
 | `npm run scrape` | Scrapea sin escribir SQL |
@@ -189,6 +193,8 @@ scripts/
   verificar-catalogo.mjs  Validación del catálogo
   generate-sitemap.mjs    Sitemap en build
   prerender.mjs           HTML estático por ruta (Chrome headless)
+  generate-og-image.mjs   Imagen social 1200×630
+  lib/launch-browser.mjs  Chrome local o Chromium empaquetado (Vercel)
   crear-esquema.mjs       Esquema SQL
 supabase/
   schema.sql              Tabla products + RLS

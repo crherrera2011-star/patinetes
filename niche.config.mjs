@@ -18,7 +18,7 @@ export default {
     description:
       "Comparativas independientes de patinetes eléctricos: autonomía real, potencia, frenos, peso y precio. Sin marketing.",
     url: "https://toppatinetes.com",
-    email: "hola@patinetes-electricos.es",
+    email: "netcarmonpublishing@gmail.com",
     amazonTag: "netcarmoncafe-21",
     amazonDomain: "www.amazon.es",
     edition: 2026,

@@ -14,7 +14,7 @@ function ensureMeta(attribute, key, content) {
 }
 
 function absoluteUrl(value) {
-  if (!value) return `${SITE.url}/images/hero-patinete.svg`;
+  if (!value) return `${SITE.url}/images/og-default.png`;
   if (/^https?:\/\//i.test(value)) return value;
   return `${SITE.url}${value.startsWith("/") ? "" : "/"}${value}`;
 }
@@ -43,7 +43,7 @@ export function useSEO({ title, description, path = "/", image, jsonLd, noindex 
       : `${SITE.fullName} · Comparativas y guía de compra 2026`;
     const desc = description || SITE.description;
     const canonical = `${SITE.url}${path === "/" ? "/" : path}`;
-    const socialImage = absoluteUrl(image || "/images/hero-patinete.svg");
+    const socialImage = absoluteUrl(image || "/images/og-default.png");
 
     document.title = fullTitle;
     ensureMeta("name", "description", desc);
@@ -93,16 +93,7 @@ export function productSchema(product) {
     sku: product.asin,
     category: CATEGORY.plural,
     url: `${SITE.url}/producto/${product.id}`,
-    aggregateRating:
-      product.rating > 0 && product.reviewCount > 0
-        ? {
-            "@type": "AggregateRating",
-            ratingValue: product.rating,
-            reviewCount: product.reviewCount,
-            bestRating: 5,
-            worstRating: 1,
-          }
-        : undefined,
+    review: editorialReview(product),
     offers:
       price > 0
         ? {
@@ -114,6 +105,34 @@ export function productSchema(product) {
             availability: "https://schema.org/InStock",
           }
         : undefined,
+  };
+}
+
+/**
+ * Reseña editorial propia (nota de 0 a 10).
+ *
+ * Antes se publicaba el `aggregateRating` de Amazon: Google considera esas
+ * reseñas contenido de terceros y su uso en datos estructurados puede acabar
+ * en una acción manual por «reseñas engañosas». La nota editorial sí es nuestra
+ * y tiene metodología pública en /guia-2026#metodologia.
+ */
+function editorialReview(product) {
+  const score = Number(product.editorScore);
+  if (!Number.isFinite(score) || score <= 0) return undefined;
+  const name = product.shortName || product.name;
+  return {
+    "@type": "Review",
+    name: `${name}: análisis y nota editorial`,
+    reviewBody:
+      product.idealFor ||
+      `Análisis de ${name}: especificaciones, precio orientativo y nota editorial de ${SITE.fullName}.`,
+    reviewRating: {
+      "@type": "Rating",
+      ratingValue: score.toFixed(1),
+      bestRating: 10,
+      worstRating: 0,
+    },
+    author: { "@type": "Organization", name: SITE.fullName, url: SITE.url },
   };
 }
 

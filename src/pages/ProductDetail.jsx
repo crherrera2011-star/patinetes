@@ -41,7 +41,7 @@ import {
   specValue,
 } from "../lib/normalize-product";
 import { priceBandLabel } from "../lib/site";
-import { formatCompact, formatPrice } from "../lib/format";
+import { formatCompact, formatDate, formatPrice } from "../lib/format";
 import { breadcrumbSchema, productSchema, useSEO } from "../lib/seo";
 
 const TABS = [
@@ -601,6 +601,13 @@ export default function ProductDetail() {
                     : "Sin opiniones todavía"}
                 </span>
               </div>
+
+              {product.updatedAt && (
+                <p className="mt-2 text-[11px] leading-relaxed text-ink-muted">
+                  Ficha revisada el {formatDate(product.updatedAt)}. El precio es orientativo:
+                  confirma el importe final en Amazon.
+                </p>
+              )}
 
               <div className="mt-5 border-t border-line pt-5">
                 <div className="flex items-baseline gap-2">

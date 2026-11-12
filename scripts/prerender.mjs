@@ -23,13 +23,13 @@ import { createServer } from "node:http";
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { existsSync, statSync } from "node:fs";
 import path from "node:path";
+import { launchBrowser } from "./lib/launch-browser.mjs";
 
 const ROOT = process.cwd();
 const DIST = path.join(ROOT, "dist");
 const PORT = Number(process.env.PRERENDER_PORT || 4599);
 const BASE_URL = `http://127.0.0.1:${PORT}`;
 const NAV_TIMEOUT = Number(process.env.PRERENDER_TIMEOUT || 30000);
-const BROWSER_ARGS = ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"];
 
 if (process.env.PRERENDER_DISABLED === "1") {
   console.log("Prerender: desactivado por PRERENDER_DISABLED=1.");
@@ -102,7 +102,9 @@ async function main() {
   const results = [];
 
   try {
-    browser = await launchBrowser();
+    const launched = await launchBrowser();
+    browser = launched.browser;
+    console.log(`Prerender: navegador listo (${launched.strategy}).`);
 
     const routes = await readRoutes();
     console.log(`Prerender: ${routes.length} rutas en ${BASE_URL}`);
@@ -132,47 +134,6 @@ async function main() {
     console.warn(`Prerender: ${failed.length} ruta(s) sin HTML propio (usarán el shell SPA).`);
   }
   console.log(`Prerender: ${written}/${results.length} páginas escritas.`);
-}
-
-async function launchBrowser() {
-  // En Linux (Vercel) se prefiere el Chromium empaquetado: el build no ejecuta
-  // la descarga de `puppeteer`, así que su binario no existe.
-  const strategies =
-    process.platform === "linux"
-      ? [launchWithServerlessChromium, launchWithBundledChrome]
-      : [launchWithBundledChrome, launchWithServerlessChromium];
-
-  const errors = [];
-  for (const strategy of strategies) {
-    try {
-      const browser = await strategy();
-      console.log(`Prerender: navegador listo (${strategy.name}).`);
-      return browser;
-    } catch (error) {
-      errors.push(`${strategy.name}: ${error?.message || error}`);
-    }
-  }
-  throw new Error(errors.join(" | "));
-}
-
-async function launchWithBundledChrome() {
-  const { default: puppeteer } = await import("puppeteer");
-  return puppeteer.launch({ headless: true, args: BROWSER_ARGS });
-}
-
-async function launchWithServerlessChromium() {
-  const [{ default: chromium }, { default: puppeteer }] = await Promise.all([
-    import("@sparticuz/chromium"),
-    import("puppeteer-core"),
-  ]);
-  return puppeteer.launch({
-    // `--single-process` viene por defecto en @sparticuz/chromium y hace que
-    // Chrome se caiga al abrir varias pestañas; aquí se renderiza en serie.
-    args: [...chromium.args.filter((arg) => arg !== "--single-process"), ...BROWSER_ARGS],
-    executablePath: await chromium.executablePath(),
-    headless: true,
-    defaultViewport: { width: 1280, height: 900 },
-  });
 }
 
 async function readRoutes() {
