@@ -382,6 +382,53 @@ export default function Guia2026() {
           </div>
         </section>
 
+        {/* Más guías */}
+        <section id="mas-guias" className="mt-16 scroll-mt-28">
+          <SectionHeading
+            eyebrow="Sigue leyendo"
+            title="Guías por tema"
+            description="Tres páginas que responden a las dudas que no caben en una guía de compra."
+          />
+          <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <Link
+              to="/normativa-patinete-electrico"
+              className="group rounded-2xl border border-line bg-white p-5 transition-all hover:-translate-y-0.5 hover:border-line-strong hover:shadow-card"
+            >
+              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-brand">Normativa</p>
+              <h3 className="mt-2 font-sans text-[16px] font-semibold text-ink group-hover:text-brand">
+                Patinete eléctrico en 2026
+              </h3>
+              <p className="mt-1.5 text-[12.5px] leading-relaxed text-ink-muted">
+                Casco, 15 años, seguro obligatorio, registro y zonas prohibidas.
+              </p>
+            </Link>
+            <Link
+              to="/autonomia-patinete-electrico"
+              className="group rounded-2xl border border-line bg-white p-5 transition-all hover:-translate-y-0.5 hover:border-line-strong hover:shadow-card"
+            >
+              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-brand">Autonomía</p>
+              <h3 className="mt-2 font-sans text-[16px] font-semibold text-ink group-hover:text-brand">
+                Cuánta necesitas de verdad
+              </h3>
+              <p className="mt-1.5 text-[12.5px] leading-relaxed text-ink-muted">
+                Calculadora de autonomía real y qué batería buscar según tu trayecto.
+              </p>
+            </Link>
+            <Link
+              to="/mejores-patinetes-menos-500-euros"
+              className="group rounded-2xl border border-line bg-white p-5 transition-all hover:-translate-y-0.5 hover:border-line-strong hover:shadow-card"
+            >
+              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-brand">Presupuesto</p>
+              <h3 className="mt-2 font-sans text-[16px] font-semibold text-ink group-hover:text-brand">
+                Mejores por menos de 500 €
+              </h3>
+              <p className="mt-1.5 text-[12.5px] leading-relaxed text-ink-muted">
+                Ranking por nota editorial y lo que conviene evitar en gama barata.
+              </p>
+            </Link>
+          </div>
+        </section>
+
         <section className="hero-surface hero-grain relative mt-16 overflow-hidden rounded-3xl px-6 py-12 text-center sm:px-12">
           <div className="relative z-10 mx-auto max-w-xl">
             <h2 className="text-3xl text-cream-50 sm:text-4xl">Ya sabes qué buscar</h2>

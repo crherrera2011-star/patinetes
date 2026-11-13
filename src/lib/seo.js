@@ -160,3 +160,32 @@ export function faqSchema(items) {
     })),
   };
 }
+
+/** Artículo editorial: guías propias con fecha de publicación y revisión. */
+export function articleSchema({
+  title,
+  description,
+  path,
+  datePublished,
+  dateModified,
+  image,
+}) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: title,
+    description,
+    inLanguage: "es-ES",
+    mainEntityOfPage: `${SITE.url}${path}`,
+    author: { "@type": "Organization", name: SITE.fullName, url: SITE.url },
+    publisher: {
+      "@type": "Organization",
+      name: SITE.fullName,
+      url: SITE.url,
+      logo: { "@type": "ImageObject", url: `${SITE.url}/favicon.svg` },
+    },
+    ...(datePublished ? { datePublished } : {}),
+    ...(dateModified ? { dateModified } : {}),
+    image: absoluteUrl(image || "/images/og-default.png"),
+  };
+}

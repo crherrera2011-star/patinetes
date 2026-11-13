@@ -13,6 +13,9 @@ const EXPLORE = [
 
 const GUIDES = [
   { label: "Guía de compra 2026", to: "/guia-2026" },
+  { label: "Normativa 2026", to: "/normativa-patinete-electrico" },
+  { label: "Autonomía real", to: "/autonomia-patinete-electrico" },
+  { label: "Mejores por menos de 500 €", to: "/mejores-patinetes-menos-500-euros" },
   { label: "Precios y valor", to: "/ofertas" },
   { label: "Categorías", to: "/categorias" },
   { label: "Preguntas frecuentes", to: "/guia-2026#faq" },

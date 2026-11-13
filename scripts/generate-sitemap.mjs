@@ -71,6 +71,9 @@ const STATIC_ROUTES = [
   { path: "/categorias", priority: "0.7", changefreq: "monthly", catalog: true },
   { path: "/ofertas", priority: "0.7", changefreq: "weekly", catalog: true },
   { path: "/guia-2026", priority: "0.8", changefreq: "monthly" },
+  { path: "/normativa-patinete-electrico", priority: "0.8", changefreq: "monthly", lastmod: "2026-11-13" },
+  { path: "/autonomia-patinete-electrico", priority: "0.8", changefreq: "monthly", catalog: true, lastmod: "2026-11-13" },
+  { path: "/mejores-patinetes-menos-500-euros", priority: "0.8", changefreq: "weekly", catalog: true, lastmod: "2026-11-13" },
   { path: "/aviso-legal", priority: "0.2", changefreq: "yearly" },
 ];
 
@@ -165,9 +168,11 @@ async function main() {
 
   const catalogUpdated = updatedDates.sort().at(-1) || "";
   const entries = [
-    ...STATIC_ROUTES.map((route) =>
-      urlEntry({ ...route, lastmod: route.catalog ? catalogUpdated : "" })
-    ),
+    ...STATIC_ROUTES.map((route) => {
+      // lastmod = la fecha más reciente entre la del contenido y la del catálogo.
+      const dates = [route.lastmod, route.catalog ? catalogUpdated : ""].filter(Boolean).sort();
+      return urlEntry({ ...route, lastmod: dates.at(-1) || "" });
+    }),
     ...productEntries,
   ];
 
