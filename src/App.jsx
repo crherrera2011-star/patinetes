@@ -1,5 +1,6 @@
 import { lazy, Suspense } from "react";
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { Analytics } from "@vercel/analytics/react";
 import Header from "./components/ui/Header";
 import Footer from "./components/ui/Footer";
 import CompareBar from "./components/ui/CompareBar";
@@ -83,6 +84,7 @@ export default function App() {
           <AppShell />
         </CompareProvider>
       </CatalogProvider>
+      <Analytics />
     </BrowserRouter>
   );
 }
