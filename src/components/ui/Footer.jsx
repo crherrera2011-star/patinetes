@@ -12,6 +12,7 @@ const EXPLORE = [
 ];
 
 const GUIDES = [
+  { label: "Todas las guías", to: "/articulos" },
   { label: "Guía de compra 2026", to: "/guia-2026" },
   { label: "Normativa 2026", to: "/normativa-patinete-electrico" },
   { label: "Autonomía real", to: "/autonomia-patinete-electrico" },

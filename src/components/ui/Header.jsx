@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
-import { Menu, Scale, Search, X, Zap } from "lucide-react";
+import { ArrowRight, Menu, Scale, Search, X, Zap } from "lucide-react";
+import { FULL_ARTICLES } from "../../data/articles";
 import { CATALOG_PATH, NAV_LINKS, SITE } from "../../lib/site";
 import { useCompare } from "../../context/CompareContext";
 import Container from "./Container";
@@ -41,7 +42,7 @@ export default function Header() {
   };
 
   const navClass = ({ isActive }) =>
-    `relative text-[13.5px] font-medium transition-colors ${
+    `relative whitespace-nowrap text-[13.5px] font-medium transition-colors ${
       isActive
         ? "text-ink after:absolute after:-bottom-1.5 after:left-0 after:h-0.5 after:w-full after:rounded-full after:bg-brand"
         : "text-ink-muted hover:text-ink"
@@ -81,12 +82,45 @@ export default function Header() {
             </span>
           </Link>
 
-          <nav className="hidden items-center gap-7 md:flex" aria-label="Navegación principal">
+          <nav className="hidden items-center gap-5 md:flex lg:gap-6" aria-label="Navegación principal">
             {NAV_LINKS.map((item) => (
               <NavLink key={item.to} to={item.to} end={item.to === "/"} className={navClass}>
                 {item.label}
               </NavLink>
             ))}
+
+            {/* Guías editoriales: dropdown con los cromos */}
+            <div className="group relative">
+              <NavLink to="/articulos" end={false} className={navClass}>
+                Guías
+              </NavLink>
+              <div className="pointer-events-none absolute right-0 top-full mt-2 w-72 opacity-0 transition-opacity duration-200 group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100">
+                <div className="rounded-2xl border border-line bg-white p-2 shadow-lift">
+                  {FULL_ARTICLES.map((article) => (
+                    <NavLink
+                      key={article.id}
+                      to={article.path}
+                      className="flex items-start justify-between gap-3 rounded-xl px-3 py-2.5 transition-colors hover:bg-cream-100"
+                    >
+                      <div className="min-w-0">
+                        <p className="text-[10.5px] font-semibold uppercase tracking-[0.12em] text-ink-muted">
+                          {article.category}
+                        </p>
+                        <p className="truncate text-[13px] font-medium text-ink">{article.title}</p>
+                      </div>
+                      <ArrowRight className="mt-0.5 h-3.5 w-3.5 shrink-0 text-ink-muted" aria-hidden="true" />
+                    </NavLink>
+                  ))}
+                  <Link
+                    to="/articulos"
+                    className="mt-1 flex items-center justify-between gap-3 rounded-xl bg-cream-100 px-3 py-2.5 text-[12px] font-semibold text-brand transition-colors hover:bg-cream-200"
+                  >
+                    Ver todas las guías
+                    <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+                  </Link>
+                </div>
+              </div>
+            </div>
           </nav>
 
           <div className="flex items-center gap-2">
@@ -159,6 +193,39 @@ export default function Header() {
                   <span aria-hidden="true">→</span>
                 </NavLink>
               ))}
+
+              {/* Guías en móvil: submenú expandible */}
+              <details className="group">
+                <summary className="flex items-center justify-between rounded-xl px-4 py-3 text-sm font-medium text-ink-soft hover:bg-cream-100 list-none marker:content-none">
+                  Guías
+                  <ArrowRight className="h-4 w-4 shrink-0 text-ink-muted transition-transform group-open:rotate-90" />
+                </summary>
+                <div className="px-4 pb-2 space-y-1">
+                  {FULL_ARTICLES.map((article) => (
+                    <Link
+                      key={article.id}
+                      to={article.path}
+                      className="flex items-start justify-between gap-3 rounded-xl px-3 py-2 text-[13px] font-medium text-ink-soft hover:bg-cream-100"
+                    >
+                      <div className="min-w-0">
+                        <p className="text-[9.5px] font-semibold uppercase tracking-[0.12em] text-ink-muted">
+                          {article.category}
+                        </p>
+                        <p className="truncate text-ink">{article.title}</p>
+                      </div>
+                      <ArrowRight className="h-3.5 w-3.5 shrink-0 text-ink-muted" aria-hidden="true" />
+                    </Link>
+                  ))}
+                  <Link
+                    to="/articulos"
+                    className="flex items-center justify-between gap-3 rounded-xl bg-cream-100 px-3 py-2 text-[12px] font-semibold text-brand"
+                  >
+                    Ver todas las guías
+                    <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+                  </Link>
+                </div>
+              </details>
+
               <Link
                 to="/comparador"
                 className="mt-2 flex items-center justify-center gap-2 rounded-full bg-brand px-4 py-3 text-sm font-medium text-white"

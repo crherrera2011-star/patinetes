@@ -22,6 +22,8 @@ const Guia2026 = lazy(() => import("./pages/Guia2026"));
 const GuiaNormativa = lazy(() => import("./pages/GuiaNormativa"));
 const GuiaAutonomia = lazy(() => import("./pages/GuiaAutonomia"));
 const MejoresBaratos = lazy(() => import("./pages/MejoresBaratos"));
+const Articulos = lazy(() => import("./pages/Articulos"));
+const Articulo = lazy(() => import("./pages/Articulo"));
 const AvisoLegal = lazy(() => import("./pages/AvisoLegal"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
@@ -54,6 +56,8 @@ function AppShell() {
               <Route path="/normativa-patinete-electrico" element={<GuiaNormativa />} />
               <Route path="/autonomia-patinete-electrico" element={<GuiaAutonomia />} />
               <Route path="/mejores-patinetes-menos-500-euros" element={<MejoresBaratos />} />
+              <Route path="/articulos" element={<Articulos />} />
+              <Route path="/articulos/:slug" element={<Articulo />} />
               <Route path="/ofertas" element={<Offers />} />
               <Route path="/aviso-legal" element={<AvisoLegal />} />
               <Route path="/producto/:id" element={<ProductDetail />} />

@@ -10,6 +10,7 @@ import { readFile, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
+import { FULL_ARTICLES } from "../src/data/articles.js";
 
 const ROOT = process.cwd();
 // Variables definidas por el entorno (Vercel, CI) mandan sobre los archivos.
@@ -61,6 +62,8 @@ if (missing.length) {
   );
 }
 
+const LATEST_ARTICLE = FULL_ARTICLES.map((article) => article.date).sort().at(-1) || "";
+
 const STATIC_ROUTES = [
   // `catalog: true` = la página cambia cuando cambia el catálogo, así que su
   // lastmod sale del producto más reciente. Las demás no llevan lastmod: Google
@@ -74,6 +77,13 @@ const STATIC_ROUTES = [
   { path: "/normativa-patinete-electrico", priority: "0.8", changefreq: "monthly", lastmod: "2026-11-13" },
   { path: "/autonomia-patinete-electrico", priority: "0.8", changefreq: "monthly", catalog: true, lastmod: "2026-11-13" },
   { path: "/mejores-patinetes-menos-500-euros", priority: "0.8", changefreq: "weekly", catalog: true, lastmod: "2026-11-13" },
+  { path: "/articulos", priority: "0.7", changefreq: "weekly", lastmod: LATEST_ARTICLE },
+  ...FULL_ARTICLES.map((article) => ({
+    path: article.path,
+    priority: "0.7",
+    changefreq: "monthly",
+    lastmod: article.date,
+  })),
   { path: "/aviso-legal", priority: "0.2", changefreq: "yearly" },
 ];
 

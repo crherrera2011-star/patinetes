@@ -388,6 +388,12 @@ export default function Guia2026() {
             eyebrow="Sigue leyendo"
             title="Guías por tema"
             description="Tres páginas que responden a las dudas que no caben en una guía de compra."
+            action={
+              <Button as={Link} to="/articulos" variant="outline" size="sm">
+                Ver todas
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Button>
+            }
           />
           <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
             <Link

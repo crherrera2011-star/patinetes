@@ -34,7 +34,15 @@ function ensureLink(rel, href) {
  * Client-side metadata management: titles, descriptions, Open Graph, canonical
  * URLs and JSON-LD stay in sync with the current route.
  */
-export function useSEO({ title, description, path = "/", image, jsonLd, noindex = false } = {}) {
+export function useSEO({
+  title,
+  description,
+  path = "/",
+  image,
+  jsonLd,
+  noindex = false,
+  ogType = "website",
+} = {}) {
   const structuredData = jsonLd ? JSON.stringify(jsonLd) : "";
 
   useEffect(() => {
@@ -55,7 +63,7 @@ export function useSEO({ title, description, path = "/", image, jsonLd, noindex 
     ensureMeta("property", "og:title", fullTitle);
     ensureMeta("property", "og:description", desc);
     ensureMeta("property", "og:url", canonical);
-    ensureMeta("property", "og:type", "website");
+    ensureMeta("property", "og:type", ogType);
     ensureMeta("property", "og:image", socialImage);
     ensureMeta("name", "twitter:card", "summary_large_image");
     ensureMeta("name", "twitter:title", fullTitle);
@@ -75,7 +83,7 @@ export function useSEO({ title, description, path = "/", image, jsonLd, noindex 
     } else if (script) {
       script.remove();
     }
-  }, [title, description, path, image, structuredData, noindex]);
+  }, [title, description, path, image, structuredData, noindex, ogType]);
 }
 
 export function productSchema(product) {

@@ -24,11 +24,13 @@ import ScoreBadge from "../components/ui/ScoreBadge";
 import Badge from "../components/ui/Badge";
 import ProductCard from "../components/product/ProductCard";
 import ProductMedia from "../components/product/ProductMedia";
+import ArticleCard from "../components/ui/ArticleCard";
 import AffiliateNote from "../components/ui/AffiliateNote";
 import { ErrorState, LoadingGrid } from "../components/ui/PageState";
 import { useCatalog } from "../context/CatalogContext";
 import { buildPicks, SCORE_METRICS } from "../lib/normalize-product";
 import { CATEGORIES } from "../data/categories";
+import { FULL_ARTICLES } from "../data/articles";
 import { FAQS } from "../data/faqs";
 import { formatCompact, formatDate, formatPrice } from "../lib/format";
 import { faqSchema, useSEO } from "../lib/seo";
@@ -280,6 +282,36 @@ export default function Home() {
                 )}
               </div>
             )}
+          </div>
+        </Container>
+      </section>
+
+      {/* --------------------------------------------------------- Cromos */}
+      <section className="py-16 sm:py-20">
+        <Container>
+          <div className="grid grid-cols-1 gap-10 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
+            <div>
+              <SectionHeading
+                eyebrow="Guías y comparativas"
+                title="Cromos para decidir mejor"
+                description="Comparativas cara a cara y guías de potencia, peso y presupuesto. Cada cromo abre el artículo completo y puedes volver al inicio cuando quieras."
+              />
+              <p className="mt-6 max-w-md text-[13px] leading-relaxed text-ink-muted">
+                Seis piezas de cola larga que responden a la duda exacta que se busca antes de
+                comprar: Xiaomi contra Segway, cuántos vatios hacen falta para una cuesta, cuánta
+                carga aguanta un patinete o qué se puede esperar por menos de 300 €.
+              </p>
+              <Button as={Link} to="/articulos" variant="outline" size="sm" className="mt-6">
+                Ver todas las guías
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+              {FULL_ARTICLES.map((article, index) => (
+                <ArticleCard key={article.id} article={article} index={index} />
+              ))}
+            </div>
           </div>
         </Container>
       </section>
