@@ -18,6 +18,7 @@ import ScoreBadge from "../components/ui/ScoreBadge";
 import AffiliateNote from "../components/ui/AffiliateNote";
 import { ErrorState, LoadingGrid } from "../components/ui/PageState";
 import { useCatalog } from "../context/CatalogContext";
+import { trackAffiliateClick } from "../lib/analytics";
 import { PRICE_BANDS, inPriceBand } from "../lib/site";
 import { formatDate, formatPrice, median } from "../lib/format";
 import { useSEO } from "../lib/seo";
@@ -294,6 +295,7 @@ export default function Offers() {
                               href={product.affiliateUrl}
                               target="_blank"
                               rel="noopener noreferrer sponsored"
+                              onClick={() => trackAffiliateClick(product, "ofertas")}
                               className="inline-flex items-center gap-1 text-[12px] font-medium text-brand hover:text-brand-dark"
                             >
                               Amazon

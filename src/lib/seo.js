@@ -169,6 +169,23 @@ export function faqSchema(items) {
   };
 }
 
+/** Lista ordenada de productos para las landings de categoría. */
+export function itemListSchema({ name, path, items = [] }) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name,
+    url: `${SITE.url}${path}`,
+    numberOfItems: items.length,
+    itemListElement: items.map((item, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      url: `${SITE.url}/producto/${item.id}`,
+      name: item.shortName || item.name,
+    })),
+  };
+}
+
 /** Artículo editorial: guías propias con fecha de publicación y revisión. */
 export function articleSchema({
   title,

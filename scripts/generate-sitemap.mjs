@@ -64,6 +64,18 @@ if (missing.length) {
 
 const LATEST_ARTICLE = FULL_ARTICLES.map((article) => article.date).sort().at(-1) || "";
 
+// Landings de categoría. Se mantienen aquí (y no se importan de
+// src/data/categories.js) porque ese módulo usa import.meta.env, que no existe
+// en este script de Node.
+const CATEGORY_LANDINGS = [
+  "patinetes-para-ir-al-trabajo",
+  "patinetes-ligeros-y-plegables",
+  "patinetes-hasta-400-euros",
+  "patinetes-entre-400-y-800-euros",
+  "patinetes-mas-de-800-euros",
+  "patinetes-con-suspension",
+];
+
 const STATIC_ROUTES = [
   // `catalog: true` = la página cambia cuando cambia el catálogo, así que su
   // lastmod sale del producto más reciente. Las demás no llevan lastmod: Google
@@ -72,6 +84,12 @@ const STATIC_ROUTES = [
   { path: `/${CATEGORY_SLUG}`, priority: "0.9", changefreq: "weekly", catalog: true },
   { path: "/comparador", priority: "0.6", changefreq: "monthly", catalog: true },
   { path: "/categorias", priority: "0.7", changefreq: "monthly", catalog: true },
+  ...CATEGORY_LANDINGS.map((slug) => ({
+    path: `/categorias/${slug}`,
+    priority: "0.8",
+    changefreq: "weekly",
+    catalog: true,
+  })),
   { path: "/ofertas", priority: "0.7", changefreq: "weekly", catalog: true },
   { path: "/guia-2026", priority: "0.8", changefreq: "monthly" },
   { path: "/normativa-patinete-electrico", priority: "0.8", changefreq: "monthly", lastmod: "2026-11-13" },

@@ -23,6 +23,7 @@ import ProductMedia from "../components/product/ProductMedia";
 import RadarChart from "../components/product/RadarChart";
 import BarChart from "../components/product/BarChart";
 import { ErrorState, PageLoader } from "../components/ui/PageState";
+import { trackAffiliateClick } from "../lib/analytics";
 import { useCatalog } from "../context/CatalogContext";
 import { useCompare } from "../context/CompareContext";
 import {
@@ -337,7 +338,12 @@ export default function Comparison() {
                             >
                               Análisis
                             </Button>
-                            <Button href={product.affiliateUrl} size="sm" className="flex-1">
+                            <Button
+                              href={product.affiliateUrl}
+                              size="sm"
+                              className="flex-1"
+                              onClick={() => trackAffiliateClick(product, "comparador")}
+                            >
                               Ver precio
                               <ArrowUpRight className="h-3.5 w-3.5" />
                             </Button>

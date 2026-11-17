@@ -8,6 +8,7 @@ import ProductMedia from "./ProductMedia";
 import { useCompare } from "../../context/CompareContext";
 import { formatCompact, formatPrice } from "../../lib/format";
 import { specValue, specDisplay } from "../../lib/normalize-product";
+import { trackAffiliateClick } from "../../lib/analytics";
 
 const AWARD_TONES = {
   editor: "editor",
@@ -128,7 +129,12 @@ export default function ProductCard({ product, award, awardTone = "editor", clas
             >
               Análisis
             </Button>
-            <Button href={product.affiliateUrl} size="sm" className="flex-1">
+            <Button
+              href={product.affiliateUrl}
+              size="sm"
+              className="flex-1"
+              onClick={() => trackAffiliateClick(product, "tarjeta")}
+            >
               Ver precio
             </Button>
           </div>

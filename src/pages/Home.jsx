@@ -28,6 +28,7 @@ import ArticleCard from "../components/ui/ArticleCard";
 import AffiliateNote from "../components/ui/AffiliateNote";
 import { ErrorState, LoadingGrid } from "../components/ui/PageState";
 import { useCatalog } from "../context/CatalogContext";
+import { trackAffiliateClick } from "../lib/analytics";
 import { buildPicks, SCORE_METRICS } from "../lib/normalize-product";
 import { CATEGORIES } from "../data/categories";
 import { FULL_ARTICLES } from "../data/articles";
@@ -212,6 +213,7 @@ export default function Home() {
                         href={editorPick.affiliateUrl}
                         size="md"
                         className="whitespace-nowrap"
+                        onClick={() => trackAffiliateClick(editorPick, "home_portada")}
                       >
                         Ver en Amazon
                         <ArrowUpRight className="h-4 w-4" />
@@ -330,7 +332,7 @@ export default function Home() {
               return (
                 <Link
                   key={category.id}
-                  to={category.href}
+                  to={`/categorias/${category.slug}`}
                   className="inline-flex items-center gap-1.5 rounded-full border border-line bg-white px-3 py-1.5 text-[12px] font-medium text-ink-soft transition-colors hover:border-brand hover:text-brand"
                 >
                   <Icon className="h-3.5 w-3.5" aria-hidden="true" />

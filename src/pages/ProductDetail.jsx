@@ -42,6 +42,7 @@ import {
 } from "../lib/normalize-product";
 import { priceBandLabel } from "../lib/site";
 import { formatCompact, formatDate, formatPrice } from "../lib/format";
+import { trackAffiliateClick } from "../lib/analytics";
 import { breadcrumbSchema, productSchema, useSEO } from "../lib/seo";
 
 const TABS = [
@@ -443,7 +444,12 @@ export default function ProductDetail() {
                             </span>
                           </div>
                         </div>
-                        <Button href={product.affiliateUrl} variant="outline" size="sm">
+                        <Button
+                          href={product.affiliateUrl}
+                          variant="outline"
+                          size="sm"
+                          onClick={() => trackAffiliateClick(product, "ficha_resumen")}
+                        >
                           Ver en Amazon
                           <ArrowUpRight className="h-3.5 w-3.5" />
                         </Button>
@@ -638,7 +644,12 @@ export default function ProductDetail() {
               </div>
 
               <div className="mt-5 space-y-2.5">
-                <Button href={product.affiliateUrl} size="lg" fullWidth>
+                <Button
+                  href={product.affiliateUrl}
+                  size="lg"
+                  fullWidth
+                  onClick={() => trackAffiliateClick(product, "ficha_compra")}
+                >
                   Ver precio en Amazon
                   <ArrowUpRight className="h-4 w-4" />
                 </Button>
@@ -722,7 +733,11 @@ export default function ProductDetail() {
             >
               {selected ? <Check className="h-4 w-4" /> : <Scale className="h-4 w-4" />}
             </button>
-            <Button href={product.affiliateUrl} size="md">
+            <Button
+              href={product.affiliateUrl}
+              size="md"
+              onClick={() => trackAffiliateClick(product, "ficha_movil")}
+            >
               Ver en Amazon
               <ArrowUpRight className="h-4 w-4" />
             </Button>

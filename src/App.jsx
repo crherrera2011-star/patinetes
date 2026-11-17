@@ -15,6 +15,7 @@ import { CompareProvider } from "./context/CompareContext";
 const Home = lazy(() => import("./pages/Home"));
 const Catalog = lazy(() => import("./pages/Catalog"));
 const Categories = lazy(() => import("./pages/Categories"));
+const CategoryDetail = lazy(() => import("./pages/CategoryDetail"));
 const Comparison = lazy(() => import("./pages/Comparison"));
 const ProductDetail = lazy(() => import("./pages/ProductDetail"));
 const Offers = lazy(() => import("./pages/Offers"));
@@ -51,6 +52,7 @@ function AppShell() {
               <Route path="/" element={<Home />} />
               <Route path="/patinetes" element={<Catalog />} />
               <Route path="/categorias" element={<Categories />} />
+              <Route path="/categorias/:slug" element={<CategoryDetail />} />
               <Route path="/comparador" element={<Comparison />} />
               <Route path="/guia-2026" element={<Guia2026 />} />
               <Route path="/normativa-patinete-electrico" element={<GuiaNormativa />} />

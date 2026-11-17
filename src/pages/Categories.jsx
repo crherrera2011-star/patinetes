@@ -75,7 +75,7 @@ export default function Categories() {
             return (
               <Link
                 key={category.id}
-                to={category.href}
+                to={`/categorias/${category.slug}`}
                 className="group flex flex-col rounded-2xl border border-line bg-white p-5 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-card"
               >
                 <div className="flex items-center justify-between">
@@ -121,7 +121,7 @@ export default function Categories() {
                 </span>
               }
               action={
-                <Button as={Link} to={category.href} variant="outline" size="sm">
+                <Button as={Link} to={`/categorias/${category.slug}`} variant="outline" size="sm">
                   Ver los {countCategory(products, category)}
                   <ArrowRight className="h-4 w-4" />
                 </Button>
