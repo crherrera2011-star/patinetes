@@ -51,6 +51,10 @@ export default function Home() {
 
   const picks = useMemo(() => buildPicks(products), [products]);
   const editorPick = picks[0];
+  const visibleCategories = useMemo(
+    () => (loading ? CATEGORIES : CATEGORIES.filter((category) => products.some(category.filter))),
+    [loading, products]
+  );
   const totalReviews = useMemo(
     () => products.reduce((total, product) => total + product.reviewCount, 0),
     [products]
@@ -313,20 +317,13 @@ export default function Home() {
               ))}
             </div>
           </div>
-        </Container>
-      </section>
 
-      {/* ---------------------------------------------------------- Categories */}
-      <section className="border-y border-line bg-cream-100/50 py-16 sm:py-20">
-        <Container>
-          <SectionHeading
-            eyebrow="Explora por necesidad"
-            title="Encuentra tu punto de partida"
-            description="No todas las comparativas empiezan por el precio. Filtra por el uso que le vas a dar."
-          />
-
-          <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {CATEGORIES.map((category) => {
+          {/* Navegación compacta por necesidad (antes era una sección propia) */}
+          <div className="mt-12 flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-line pt-6">
+            <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-ink-muted">
+              O explora por necesidad
+            </span>
+            {visibleCategories.map((category) => {
               const Icon = CATEGORY_ICONS[category.icon] || Zap;
               const count = products.filter(category.filter).length;
 
@@ -334,29 +331,11 @@ export default function Home() {
                 <Link
                   key={category.id}
                   to={category.href}
-                  className="group flex flex-col rounded-2xl border border-line bg-white p-5 transition-all duration-300 hover:-translate-y-0.5 hover:border-line-strong hover:shadow-card"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-line bg-white px-3 py-1.5 text-[12px] font-medium text-ink-soft transition-colors hover:border-brand hover:text-brand"
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-soft text-brand">
-                      <Icon className="h-5 w-5" aria-hidden="true" />
-                    </span>
-                    <span className="rounded-full bg-cream-100 px-2.5 py-1 text-[10.5px] font-medium text-ink-muted">
-                      {loading ? "…" : `${count} modelos`}
-                    </span>
-                  </div>
-                  <h3 className="mt-4 font-sans text-[17px] font-semibold text-ink group-hover:text-brand">
-                    {category.title}
-                  </h3>
-                  <p className="mt-1 text-[12px] font-medium uppercase tracking-[0.1em] text-copper">
-                    {category.short}
-                  </p>
-                  <p className="mt-3 line-clamp-3 text-[13px] leading-relaxed text-ink-muted">
-                    {category.description}
-                  </p>
-                  <span className="mt-4 inline-flex items-center gap-1 text-[12.5px] font-medium text-brand">
-                    Ver selección
-                    <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
-                  </span>
+                  <Icon className="h-3.5 w-3.5" aria-hidden="true" />
+                  {category.title}
+                  <span className="tabular text-ink-muted">{loading ? "…" : count}</span>
                 </Link>
               );
             })}
