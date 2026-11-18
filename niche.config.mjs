@@ -23,6 +23,15 @@ export default {
     amazonDomain: "www.amazon.es",
     edition: 2026,
     locale: "es-ES",
+    // Datos del titular para el aviso legal (LSSI, art. 10). Si los dejas
+    // vacíos, la página muestra solo el nombre del sitio y el correo: no se
+    // inventan NIF ni domicilios. Rellénalos cuando quieras publicarlos.
+    legal: {
+      name: "",
+      nif: "",
+      address: "",
+      phone: "",
+    },
   },
 
   table: "products",

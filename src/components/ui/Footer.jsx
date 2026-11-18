@@ -6,9 +6,9 @@ import { SITE } from "../../lib/site";
 const EXPLORE = [
   { label: "Todos los patinetes", to: "/patinetes" },
   { label: "Comparador", to: "/comparador" },
-  { label: "Ligeros y plegables", to: "/patinetes?ligero=1" },
-  { label: "Hasta 400 €", to: "/patinetes?gama=entrada" },
-  { label: "Más de 800 €", to: "/patinetes?gama=alta" },
+  { label: "Ligeros y plegables", to: "/categorias/patinetes-ligeros-y-plegables" },
+  { label: "Hasta 400 €", to: "/categorias/patinetes-hasta-400-euros" },
+  { label: "Más de 800 €", to: "/categorias/patinetes-mas-de-800-euros" },
 ];
 
 const GUIDES = [
@@ -27,6 +27,7 @@ const LEGAL = [
   { label: "Afiliados y transparencia", to: "/aviso-legal#afiliados" },
   { label: "Privacidad", to: "/aviso-legal#privacidad" },
   { label: "Cookies", to: "/aviso-legal#cookies" },
+  { label: "Contacto", to: "/contacto" },
 ];
 
 export default function Footer() {

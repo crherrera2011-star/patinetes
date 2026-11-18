@@ -7,19 +7,22 @@ import { SITE } from "../lib/site";
 import { useSEO } from "../lib/seo";
 
 const SECTIONS = [
+  { id: "titular", title: "Titular del sitio" },
   { id: "afiliados", title: "Afiliados y transparencia" },
   { id: "privacidad", title: "Privacidad" },
-  { id: "cookies", title: "Cookies y almacenamiento local" },
+  { id: "cookies", title: "Cookies y almacenamiento" },
   { id: "propiedad", title: "Propiedad intelectual" },
   { id: "responsabilidad", title: "Responsabilidad" },
   { id: "ley", title: "Ley aplicable" },
 ];
 
 export default function AvisoLegal() {
+  const legal = SITE.legal || {};
+
   useSEO({
-    title: "Aviso legal, afiliados y privacidad",
+    title: "Aviso legal, privacidad y cookies",
     description:
-      "Cómo funciona Patinetes Eléctricos: programa de afiliados de Amazon, tratamiento de datos, uso de cookies y limitación de responsabilidad.",
+      "Quién está detrás de Patinetes Eléctricos, cómo se financia el sitio, qué datos se tratan, qué cookies se usan y cómo ejercer tus derechos.",
     path: "/aviso-legal",
   });
 
@@ -39,11 +42,11 @@ export default function AvisoLegal() {
             Información legal
           </p>
           <h1 className="mt-3 text-4xl leading-[1.04] text-ink sm:text-5xl">
-            Cómo trabajamos y qué hacemos con tus datos
+            Aviso legal, privacidad y cookies
           </h1>
           <p className="mt-4 text-[15px] leading-relaxed text-ink-muted">
-            Esta página explica de forma directa nuestra relación con Amazon, el tratamiento de
-            datos y las condiciones de uso del sitio. Última revisión: octubre de 2026.
+            Quién está detrás del sitio, cómo se financia, qué datos se tratan y qué cookies se usan.
+            Última revisión: noviembre de 2026.
           </p>
         </header>
 
@@ -65,18 +68,61 @@ export default function AvisoLegal() {
                   </li>
                 ))}
               </ul>
-              <div className="mt-4 border-t border-line pt-4">
+              <div className="mt-4 space-y-2 border-t border-line pt-4">
                 <Button href={`mailto:${SITE.email}`} variant="outline" size="sm" fullWidth>
                   <Mail className="h-4 w-4" />
                   Escribirnos
+                </Button>
+                <Button as={Link} to="/contacto" variant="ghost" size="sm" fullWidth>
+                  Página de contacto
                 </Button>
               </div>
             </div>
           </aside>
 
           <div className="prose-editorial max-w-none">
+            <section id="titular" className="scroll-mt-28">
+              <h2>1. Titular del sitio</h2>
+              {legal.name ? (
+                <ul>
+                  <li>
+                    <strong>Titular:</strong> {legal.name}
+                  </li>
+                  {legal.nif && (
+                    <li>
+                      <strong>NIF/CIF:</strong> {legal.nif}
+                    </li>
+                  )}
+                  {legal.address && (
+                    <li>
+                      <strong>Domicilio:</strong> {legal.address}
+                    </li>
+                  )}
+                  {legal.phone && (
+                    <li>
+                      <strong>Teléfono:</strong> {legal.phone}
+                    </li>
+                  )}
+                  <li>
+                    <strong>Correo:</strong>{" "}
+                    <a href={`mailto:${SITE.email}`}>{SITE.email}</a>
+                  </li>
+                </ul>
+              ) : (
+                <p>
+                  El titular de este sitio es <strong>{SITE.fullName}</strong>. Para cualquier
+                  consulta relacionada con el contenido, los datos o las condiciones de uso, puedes
+                  escribir a <a href={`mailto:${SITE.email}`}>{SITE.email}</a>.
+                </p>
+              )}
+              <p>
+                Este es un proyecto editorial independiente sobre patinetes eléctricos. No es una
+                tienda: no vendemos productos ni gestionamos pedidos, garantías o devoluciones.
+              </p>
+            </section>
+
             <section id="afiliados" className="scroll-mt-28">
-              <h2>1. Afiliados y transparencia</h2>
+              <h2>2. Afiliados y transparencia</h2>
               <p>
                 <strong>{SITE.fullName}</strong> es un sitio editorial independiente dedicado a
                 comparar patinetes eléctricos disponibles en Amazon.es. Para mantener el proyecto,
@@ -96,18 +142,27 @@ export default function AvisoLegal() {
             </section>
 
             <section id="privacidad" className="scroll-mt-28">
-              <h2>2. Privacidad</h2>
+              <h2>3. Privacidad</h2>
               <p>
                 Este sitio no requiere registro y no solicita datos personales para consultar el
                 catálogo, el comparador o las guías. No vendemos ni cedemos datos a terceros con
-                fines publicitarios.
+                fines publicitarios y no elaboramos perfiles de usuario.
               </p>
+
+              <h3>Responsable del tratamiento</h3>
+              <p>
+                El responsable es el titular indicado en el apartado 1. Para cualquier cuestión
+                relacionada con tus datos, escribe a{" "}
+                <a href={`mailto:${SITE.email}`}>{SITE.email}</a>.
+              </p>
+
               <h3>Qué datos podemos tratar</h3>
               <ul>
                 <li>
-                  <strong>Datos técnicos:</strong> el proveedor de alojamiento puede registrar la
-                  dirección IP y el agente de usuario en sus registros de acceso por seguridad y
-                  funcionamiento del servicio.
+                  <strong>Datos técnicos de acceso:</strong> el proveedor de alojamiento puede
+                  registrar la dirección IP, el agente de usuario y la fecha de la petición en sus
+                  registros de seguridad. Se conservan durante un periodo limitado y no se usan para
+                  publicidad.
                 </li>
                 <li>
                   <strong>Correo electrónico:</strong> si nos escribes a{" "}
@@ -118,47 +173,105 @@ export default function AvisoLegal() {
                   <strong>Preferencias del comparador:</strong> los modelos seleccionados se guardan
                   en el almacenamiento local de tu navegador, no en nuestros servidores.
                 </li>
+                <li>
+                  <strong>Analítica agregada:</strong> usamos Vercel Analytics para saber qué páginas
+                  se visitan. Es una analítica sin cookies y sin identificación personal; los eventos
+                  de clic en enlaces de afiliado solo registran el modelo, la ubicación del botón y el
+                  precio, nunca datos que te identifiquen.
+                </li>
               </ul>
-              <h3>Base legal y derechos</h3>
+
+              <h3>Para qué y con qué base legal</h3>
+              <ul>
+                <li>
+                  <strong>Seguridad y funcionamiento:</strong> interés legítimo en mantener el sitio
+                  disponible y protegido frente a abusos.
+                </li>
+                <li>
+                  <strong>Responder a tus mensajes:</strong> consentimiento y relación precontractual
+                  derivada de tu propia consulta.
+                </li>
+                <li>
+                  <strong>Recordar el comparador:</strong> necesidad técnica del servicio que has
+                  activado voluntariamente.
+                </li>
+                <li>
+                  <strong>Medir audiencia:</strong> interés legítimo en conocer qué contenido es útil,
+                  con datos agregados y sin perfilado.
+                </li>
+              </ul>
+
+              <h3>Cuánto tiempo se conservan</h3>
+              <ul>
+                <li>Registros de acceso: el periodo limitado que fije el proveedor de alojamiento.</li>
+                <li>Correos: mientras dure la consulta y, después, el tiempo necesario para atender posibles responsabilidades.</li>
+                <li>Comparador: en tu navegador hasta que lo borres o vacíes la comparación.</li>
+              </ul>
+
+              <h3>Quién puede acceder</h3>
               <p>
-                El tratamiento se basa en el interés legítimo de responder a tus consultas y en el
-                consentimiento técnico necesario para recordar tus preferencias. Puedes solicitar
-                acceso, rectificación, supresión u oposición escribiendo a{" "}
-                <a href={`mailto:${SITE.email}`}>{SITE.email}</a>. También puedes reclamar ante la
-                Agencia Española de Protección de Datos.
+                No cedemos datos a terceros con fines comerciales. Para prestar el servicio usamos
+                proveedores que actúan como encargados del tratamiento: Vercel (alojamiento y
+                analítica agregada), Supabase (base de datos del catálogo) y Amazon (solo cuando
+                pulsas un enlace de afiliado y abandonas este sitio). Cada uno aplica su propia
+                política de privacidad.
+              </p>
+
+              <h3>Seguridad y derechos</h3>
+              <p>
+                El sitio se sirve por HTTPS y el acceso a la base de datos está restringido. Puedes
+                solicitar acceso, rectificación, supresión, oposición, limitación o portabilidad
+                escribiendo a <a href={`mailto:${SITE.email}`}>{SITE.email}</a>. También puedes
+                reclamar ante la Agencia Española de Protección de Datos.
               </p>
               <p>
-                Amazon es un servicio independiente con su propia política de privacidad. Al pulsar
-                un enlace de afiliado abandonas este sitio y pasas a estar sujeto a las condiciones
-                de Amazon.es.
+                Amazon es un servicio independiente. Al pulsar un enlace de afiliado abandonas este
+                sitio y pasas a estar sujeto a las condiciones y la política de Amazon.es.
               </p>
             </section>
 
             <section id="cookies" className="scroll-mt-28">
-              <h2>3. Cookies y almacenamiento local</h2>
+              <h2>4. Cookies y almacenamiento local</h2>
               <p>
-                Este sitio no utiliza cookies publicitarias ni de seguimiento propias. Para recordar
-                el comparador empleamos <strong>localStorage</strong>, una tecnología del navegador
-                que guarda información en tu dispositivo y no se envía a nuestros servidores.
+                Este sitio <strong>no instala cookies propias de publicidad ni de seguimiento</strong>.
+                No hay píxeles publicitarios, ni redes sociales embebidas, ni venta de audiencias. Por
+                eso no verás un banner de consentimiento: no hay cookies que consentir.
               </p>
+
+              <h3>Analítica sin cookies</h3>
+              <p>
+                Usamos <strong>Vercel Analytics</strong> para contar visitas y clics de forma agregada.
+                Esta herramienta no usa cookies, no identifica a personas concretas y no permite
+                seguirte por otras webs. Los eventos de clic en enlaces de afiliado registran solo el
+                identificador del modelo, la ubicación del botón y el precio mostrado.
+              </p>
+
+              <h3>Almacenamiento local del comparador</h3>
               <ul>
                 <li>
-                  <strong>Clave <code>patinetes:compare:v1</code>:</strong> almacena los
-                  identificadores de los patinetes que has añadido al comparador (máximo tres).
+                  <strong>Clave <code>patinetes:compare:v1</code>:</strong> guarda los identificadores
+                  de los patinetes que has añadido al comparador (máximo tres) en tu propio navegador.
                 </li>
                 <li>
-                  Puedes borrar esta información en cualquier momento desde los ajustes de tu
-                  navegador o vaciando la comparación.
-                </li>
-                <li>
-                  Si en el futuro incorporamos analítica o cookies de terceros, actualizaremos esta
-                  página y solicitaremos el consentimiento correspondiente.
+                  Esta información no se envía a nuestros servidores y puedes borrarla en cualquier
+                  momento desde los ajustes de tu navegador o vaciando la comparación.
                 </li>
               </ul>
+
+              <h3>Cookies de Amazon</h3>
+              <p>
+                Cuando pulsas un enlace de afiliado, pasas a Amazon.es. Amazon puede instalar sus
+                propias cookies para gestionar la sesión y atribuir la compra. Esas cookies dependen de
+                Amazon y se rigen por su política de cookies y privacidad, no por la de este sitio.
+              </p>
+              <p>
+                Si en el futuro incorporamos cookies de terceros con fines publicitarios o de
+                perfilado, actualizaremos esta página y solicitaremos el consentimiento previo.
+              </p>
             </section>
 
             <section id="propiedad" className="scroll-mt-28">
-              <h2>4. Propiedad intelectual</h2>
+              <h2>5. Propiedad intelectual</h2>
               <p>
                 Los textos, la selección editorial, el diseño y el código de este sitio pertenecen a{" "}
                 {SITE.fullName}, salvo que se indique lo contrario. Las marcas, nombres comerciales e
@@ -173,7 +286,7 @@ export default function AvisoLegal() {
             </section>
 
             <section id="responsabilidad" className="scroll-mt-28">
-              <h2>5. Responsabilidad</h2>
+              <h2>6. Responsabilidad</h2>
               <p>
                 Trabajamos con la información publicada por los fabricantes y con las valoraciones
                 disponibles en Amazon en el momento de la revisión. Aun así, las especificaciones,
@@ -200,7 +313,7 @@ export default function AvisoLegal() {
             </section>
 
             <section id="ley" className="scroll-mt-28">
-              <h2>6. Ley aplicable</h2>
+              <h2>7. Ley aplicable</h2>
               <p>
                 Estas condiciones se rigen por la legislación española. Cualquier controversia
                 derivada del uso del sitio se someterá a los juzgados y tribunales competentes que
@@ -208,7 +321,8 @@ export default function AvisoLegal() {
               </p>
               <p>
                 Para cualquier duda sobre este aviso legal puedes escribir a{" "}
-                <a href={`mailto:${SITE.email}`}>{SITE.email}</a>.
+                <a href={`mailto:${SITE.email}`}>{SITE.email}</a> o usar la{" "}
+                <Link to="/contacto">página de contacto</Link>.
               </p>
             </section>
           </div>

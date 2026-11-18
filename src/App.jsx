@@ -26,6 +26,7 @@ const MejoresBaratos = lazy(() => import("./pages/MejoresBaratos"));
 const Articulos = lazy(() => import("./pages/Articulos"));
 const Articulo = lazy(() => import("./pages/Articulo"));
 const AvisoLegal = lazy(() => import("./pages/AvisoLegal"));
+const Contacto = lazy(() => import("./pages/Contacto"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 function AppShell() {
@@ -62,6 +63,7 @@ function AppShell() {
               <Route path="/articulos/:slug" element={<Articulo />} />
               <Route path="/ofertas" element={<Offers />} />
               <Route path="/aviso-legal" element={<AvisoLegal />} />
+              <Route path="/contacto" element={<Contacto />} />
               <Route path="/producto/:id" element={<ProductDetail />} />
               <Route path="/maquinas/:id" element={<LegacyProductRedirect />} />
               <Route path="*" element={<NotFound />} />

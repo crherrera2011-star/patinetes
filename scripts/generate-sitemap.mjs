@@ -103,6 +103,7 @@ const STATIC_ROUTES = [
     lastmod: article.date,
   })),
   { path: "/aviso-legal", priority: "0.2", changefreq: "yearly" },
+  { path: "/contacto", priority: "0.3", changefreq: "yearly" },
 ];
 
 async function fetchProducts() {
