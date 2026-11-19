@@ -93,7 +93,7 @@ export default function Guia2026() {
   const bands = PRICE_BANDS.map((band) => ({
     ...band,
     items: products
-      .filter((product) => inPriceBand(product.price, band))
+      .filter((product) => product.price > 0 && inPriceBand(product.price, band))
       .sort((a, b) => b.editorScore - a.editorScore)
       .slice(0, 3),
   }));

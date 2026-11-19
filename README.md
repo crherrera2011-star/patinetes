@@ -190,7 +190,8 @@ scripts/
   top20-amazon.mjs        Búsqueda del top 20
   scrape-catalogo.mjs     Scraper y generación de SQL
   actualizar-catalogo.mjs Actualización semanal y reemplazo atómico
-  verificar-catalogo.mjs  Validación del catálogo
+  verificar-catalogo.mjs  Validación del catálogo y de los precios
+  verificar-enlaces.mjs   Chequeo de enlaces, ASIN y tag de afiliado
   generate-sitemap.mjs    Sitemap en build
   prerender.mjs           HTML estático por ruta (Chrome headless)
   generate-og-image.mjs   Imagen social 1200×630
@@ -209,7 +210,22 @@ datos/
   ultima-actualizacion.log   Log de la última ejecución
 .github/workflows/
   actualizar-catalogo.yml Actualización semanal programada
+  verificar-enlaces.yml   Chequeo semanal de enlaces de afiliado
 ```
+
+## Control de calidad
+
+- `npm run verify` audita el snapshot: ASIN duplicados, precios fuera del
+  rango publicable (`priceGuard` en `niche.config.mjs`), specs, imágenes,
+  reseñas y tag de afiliado.
+- `npm run verify:links` recorre los enlaces del catálogo y distingue entre
+  enlace roto, redirección a otro ASIN y bloqueo antirrobot de Amazon. Un
+  bloqueo no cuenta como error.
+- La actualización semanal aplica el mismo `priceGuard` antes de tocar
+  Supabase: un precio fuera de rango o que se aleje más de 5× del anterior se
+  descarta y se conserva el último válido.
+- Las fichas sin precio fiable se muestran como «No disponible» y no entran en
+  la mediana ni en las franjas de presupuesto.
 
 ## Notas editoriales
 

@@ -21,8 +21,14 @@ export function toNumber(value, fallback = 0) {
   return fallback;
 }
 
-export function formatPrice(value) {
-  return eurFormatter.format(toNumber(value));
+/**
+ * Un precio 0 o inválido no es un precio: mostrarlo como «0,00 €» confunde y
+ * rompe la confianza. Devuelve el fallback y deja que la ficha explique el
+ * estado real («No disponible»).
+ */
+export function formatPrice(value, fallback = "—") {
+  const number = toNumber(value);
+  return number > 0 ? eurFormatter.format(number) : fallback;
 }
 
 export function formatNumber(value) {

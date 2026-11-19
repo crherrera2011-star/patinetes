@@ -46,6 +46,19 @@ export default {
     unit: "modelos",
   },
 
+  // ------------------------------------------------- control de precios (€)
+  // Un precio fuera de estos límites, o que se aleje demasiado del que ya
+  // teníamos, se descarta: casi siempre es un accesorio, una cuota de
+  // financiación o el selector de otro producto. `staleDays` marca cuándo
+  // avisar en la ficha de que el precio lleva tiempo sin verificarse.
+  priceGuard: {
+    min: 50,
+    max: 5000,
+    minRatio: 0.2,
+    maxRatio: 5,
+    staleDays: 14,
+  },
+
   // ------------------------------------------------------------ precio (€)
   // `max` es exclusivo salvo en la última franja.
   priceBands: [

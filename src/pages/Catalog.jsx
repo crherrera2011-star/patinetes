@@ -65,11 +65,11 @@ export default function Catalog() {
       if (words.length) {
         if (!words.every((word) => product.searchIndex.includes(word))) return false;
       }
-      if (band && !inPriceBand(product.price, band)) return false;
+      if (band && (!(product.price > 0) || !inPriceBand(product.price, band))) return false;
       if (selectedBrands.length && !selectedBrands.includes(product.brand)) return false;
 
       const weight = specValue(product, "peso_kg");
-      if (ligero && !(typeof weight === "number" && weight > 0 && weight <= 14)) return false;
+      if (ligero && !(typeof weight === "number" && weight > 0 && weight <= 16)) return false;
       if (suspension && !specValue(product, "suspension")) return false;
       if (
         uso === "commuter" &&
@@ -80,11 +80,19 @@ export default function Catalog() {
       return true;
     });
 
+    // Los modelos sin precio van al final en cualquier orden por precio.
+    const byPrice = (a, b, direction) => {
+      if (!(a.price > 0) && !(b.price > 0)) return 0;
+      if (!(a.price > 0)) return 1;
+      if (!(b.price > 0)) return -1;
+      return (a.price - b.price) * direction;
+    };
+
     switch (orden) {
       case "precio-asc":
-        return [...list].sort((a, b) => a.price - b.price);
+        return [...list].sort((a, b) => byPrice(a, b, 1));
       case "precio-desc":
-        return [...list].sort((a, b) => b.price - a.price);
+        return [...list].sort((a, b) => byPrice(a, b, -1));
       case "valoracion":
         return [...list].sort((a, b) => b.rating - a.rating || b.reviewCount - a.reviewCount);
       case "opiniones":
@@ -100,7 +108,7 @@ export default function Catalog() {
 
   const activeFilters = [
     gama && { key: "gama", label: PRICE_BANDS.find((band) => band.id === gama)?.label || gama },
-    ligero && { key: "ligero", label: "Ligeros (≤ 14 kg)" },
+    ligero && { key: "ligero", label: "Ligeros (≤ 16 kg)" },
     suspension && { key: "suspension", label: "Con suspensión" },
     uso === "commuter" && { key: "uso", label: "Para ir a trabajar" },
     ...selectedBrands.map((brand) => ({ key: `marca:${brand}`, label: brand, brand })),
@@ -243,7 +251,7 @@ export default function Catalog() {
                     onChange={() => updateParam("ligero", ligero ? "" : "1")}
                     className="h-3.5 w-3.5 rounded border-line-strong accent-brand"
                   />
-                  Ligeros (≤ 14 kg)
+                  Ligeros (≤ 16 kg)
                 </label>
                 <label className="flex w-full cursor-pointer items-center gap-2 py-1 text-[13px] text-ink-soft">
                   <input

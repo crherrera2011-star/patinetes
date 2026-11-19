@@ -50,7 +50,9 @@ export default function Home() {
   const [query, setQuery] = useState("");
   const navigate = useNavigate();
 
-  const picks = useMemo(() => buildPicks(products), [products]);
+  // La elección del editor se muestra con precio: si un modelo no lo tiene,
+  // sigue en el catálogo pero no ocupa el escaparate principal.
+  const picks = useMemo(() => buildPicks(products.filter((product) => product.price > 0)), [products]);
   const editorPick = picks[0];
   const visibleCategories = useMemo(
     () => (loading ? CATEGORIES : CATEGORIES.filter((category) => products.some(category.filter))),

@@ -90,7 +90,7 @@ export default function Comparison() {
     [selected]
   );
   const bestPrice = useMemo(
-    () => [...selected].sort((a, b) => a.price - b.price)[0],
+    () => selected.filter((product) => product.price > 0).sort((a, b) => a.price - b.price)[0],
     [selected]
   );
   const bestAutonomy = useMemo(

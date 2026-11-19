@@ -1,0 +1,89 @@
+name: Verificar enlaces de afiliado
+
+# Todos los martes a las 06:00 UTC (08:00 en verano y 07:00 en invierno en
+# España) y también a mano desde Actions. No modifica el catálogo: solo avisa
+# de enlaces rotos, ASIN que no coinciden o tag de afiliado incorrecto.
+#
+# Requisitos (Settings → Secrets and variables → Actions):
+#   SUPABASE_URL               URL del proyecto
+#   SUPABASE_SERVICE_ROLE_KEY  Clave service_role (o una anon con lectura)
+#   AMAZON_ASSOCIATE_TAG       Opcional; si falta se usa el de niche.config.mjs
+
+on:
+  schedule:
+    - cron: '0 6 * * 2'
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: 'Número máximo de enlaces a comprobar (vacío = todos)'
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verificar-enlaces
+  cancel-in-progress: true
+
+jobs:
+  verificar:
+    name: Comprobar enlaces
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Descargar repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Comprobar credenciales
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          missing=0
+          if [ -z "$SUPABASE_URL" ]; then
+            echo "::error::Falta el secret SUPABASE_URL."
+            missing=1
+          fi
+          if [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
+            echo "::error::Falta el secret SUPABASE_SERVICE_ROLE_KEY."
+            missing=1
+          fi
+          exit $missing
+
+      - name: Verificar enlaces
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          AMAZON_ASSOCIATE_TAG: ${{ secrets.AMAZON_ASSOCIATE_TAG }}
+          LIMIT: ${{ inputs.limit }}
+        run: |
+          args=(--json datos/enlaces.json --markdown datos/enlaces.md)
+          if [ -n "$LIMIT" ]; then
+            args+=(--limit "$LIMIT")
+          fi
+          node scripts/verificar-enlaces.mjs "${args[@]}"
+
+      - name: Añadir resumen a la ejecución
+        if: always()
+        run: |
+          if [ -f datos/enlaces.md ]; then
+            cat datos/enlaces.md >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Publicar informe
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: enlaces-${{ github.run_id }}
+          path: |
+            datos/enlaces.json
+            datos/enlaces.md
+          if-no-files-found: ignore
+          retention-days: 30

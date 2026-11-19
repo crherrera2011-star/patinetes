@@ -67,6 +67,20 @@ const config = await loadConfig();
 const items = loadItems(inputPath);
 const scoreKeys = (config?.scores || []).map((score) => snake(score.key));
 const expectedTag = config?.site?.amazonTag || process.env.VITE_AMAZON_TAG || "";
+const guard = {
+  min: 50,
+  max: 5000,
+  minRatio: 0.2,
+  maxRatio: 5,
+  staleDays: 14,
+  ...(config?.priceGuard || {}),
+};
+const daysSince = (value) => {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return Math.max(0, Math.floor((Date.now() - date.getTime()) / 86400000));
+};
 
 const errors = [];
 const warnings = [];
@@ -117,7 +131,20 @@ for (const [index, item] of items.entries()) {
   if (/^amazon\.es$/i.test(name)) localErrors.push("el nombre es la home de Amazon");
 
   if (!price) localErrors.push("precio 0 o inválido");
-  else prices.push(price);
+  else {
+    prices.push(price);
+    if (price < guard.min) {
+      localErrors.push(`precio ${price} € por debajo del mínimo (${guard.min} €)`);
+    } else if (price > guard.max) {
+      localErrors.push(`precio ${price} € por encima del máximo (${guard.max} €)`);
+    }
+  }
+
+  const updatedAt = item.updated_at || item.updatedAt;
+  const age = daysSince(updatedAt);
+  if (age !== null && age > guard.staleDays) {
+    localWarnings.push(`precio sin actualizar desde hace ${age} días (${updatedAt})`);
+  }
 
   if (rating < 0 || rating > 5) localErrors.push(`rating fuera de rango: ${rating}`);
   if (reviews < 0 || !Number.isFinite(reviews)) localErrors.push(`reseñas inválidas: ${reviews}`);

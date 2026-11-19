@@ -36,6 +36,7 @@ import { spawn } from "node:child_process";
 import { createRequire } from "node:module";
 import { pathToFileURL } from "node:url";
 import { createClient } from "@supabase/supabase-js";
+import { PRICE_GUARD, isPlausiblePrice, priceRejectionReason } from "../src/lib/price-guard.js";
 
 const require = createRequire(import.meta.url);
 
@@ -410,18 +411,17 @@ function mergeRow({ baseline, scraped, url, asin, tag, domain, scoreColumns, now
 
   const scrapedPrice = toNumber(scraped?.price);
   const baselinePrice = toNumber(baseline?.price);
-  // Un selector de Amazon puede devolver el precio de un accesorio, un envío
-  // o una cuota. Si el precio nuevo se aleja demasiado del que ya teníamos,
-  // se conserva el anterior en vez de publicar un dato absurdo.
-  const priceIsPlausible =
-    scrapedPrice > 0 &&
-    (baselinePrice <= 0 ||
-      (scrapedPrice >= baselinePrice * 0.2 && scrapedPrice <= baselinePrice * 5));
-  const price = priceIsPlausible ? scrapedPrice : baselinePrice;
-  if (scrapedPrice > 0 && !priceIsPlausible) {
+  // Un selector de Amazon puede devolver el precio de un accesorio, un envío,
+  // una cuota o incluso otro producto. Se descarta si cae fuera del rango
+  // absoluto o si se aleja demasiado del precio que ya teníamos.
+  const rejection = priceRejectionReason(scrapedPrice, baselinePrice);
+  const price = rejection ? baselinePrice : scrapedPrice;
+  if (scrapedPrice > 0 && rejection) {
     log(
       "warn",
-      `Precio descartado para ${asin}: ${scrapedPrice} € frente a ${baselinePrice} € actuales; se conserva el anterior.`
+      `Precio descartado para ${asin}: ${scrapedPrice} € (${rejection}).${
+        baselinePrice > 0 ? ` Se conserva ${baselinePrice} €.` : " Se publica sin precio."
+      }`
     );
   }
   const slugBase = slugify(name).slice(0, 70);
@@ -513,6 +513,27 @@ function validateCatalog(rows, baselineCount, force, minProducts) {
     }
     if (ids.has(row.id)) throw new Error(`El ASIN ${row.id} está duplicado. No se tocará Supabase.`);
     ids.add(row.id);
+  }
+
+  const outOfRange = rows.filter((row) => row.price > 0 && !isPlausiblePrice(row.price, 0));
+  if (outOfRange.length && !force) {
+    throw new Error(
+      `Hay ${outOfRange.length} precio(s) fuera del rango publicable (${PRICE_GUARD.min}–${PRICE_GUARD.max} €): ${outOfRange
+        .slice(0, 5)
+        .map((row) => `${row.id} (${row.price} €)`)
+        .join(", ")}. No se tocará Supabase; revisa esas filas o usa --force.`
+    );
+  }
+
+  const withoutPrice = rows.filter((row) => !(row.price > 0));
+  if (withoutPrice.length) {
+    log(
+      "warn",
+      `${withoutPrice.length} producto(s) sin precio fiable: se publicarán como «No disponible» (${withoutPrice
+        .slice(0, 5)
+        .map((row) => row.id)
+        .join(", ")}${withoutPrice.length > 5 ? "…" : ""}).`
+    );
   }
 
   return true;

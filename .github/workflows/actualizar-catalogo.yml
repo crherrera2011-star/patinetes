@@ -112,6 +112,17 @@ jobs:
           fi
           node scripts/actualizar-catalogo.mjs "${args[@]}"
 
+      - name: Auditar el catálogo generado
+        if: success()
+        run: |
+          if [ ! -f datos/catalogo.actualizado.json ]; then
+            echo "::warning::No hay snapshot que auditar."
+            exit 0
+          fi
+          node scripts/verificar-catalogo.mjs \
+            --input datos/catalogo.actualizado.json \
+            --config niche.config.mjs
+
       - name: Reconstruir la web con el catálogo nuevo
         if: success() && (github.event_name != 'workflow_dispatch' || inputs.dry_run == false)
         env:

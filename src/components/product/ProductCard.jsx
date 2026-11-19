@@ -7,6 +7,7 @@ import Button from "../ui/Button";
 import ProductMedia from "./ProductMedia";
 import { useCompare } from "../../context/CompareContext";
 import { formatCompact, formatPrice } from "../../lib/format";
+import { isAvailablePrice } from "../../lib/price-guard";
 import { specValue, specDisplay } from "../../lib/normalize-product";
 import { trackAffiliateClick } from "../../lib/analytics";
 
@@ -20,6 +21,7 @@ const AWARD_TONES = {
 export default function ProductCard({ product, award, awardTone = "editor", className = "" }) {
   const { isSelected, toggle } = useCompare();
   const selected = isSelected(product.id);
+  const hasPrice = isAvailablePrice(product.price);
 
   const details = [
     specValue(product, "autonomia_km")
@@ -106,13 +108,17 @@ export default function ProductCard({ product, award, awardTone = "editor", clas
           <div className="flex items-end justify-between gap-3 border-t border-line pt-4">
             <div>
               <p className="text-[9.5px] font-semibold uppercase tracking-[0.14em] text-ink-muted">
-                Precio orientativo
+                {hasPrice ? "Precio orientativo" : "Precio"}
               </p>
-              <p className="mt-0.5 text-xl font-semibold tabular tracking-[-0.02em] text-ink">
-                {formatPrice(product.price)}
+              <p
+                className={`mt-0.5 tabular tracking-[-0.02em] text-ink ${
+                  hasPrice ? "text-xl font-semibold" : "text-[13px] font-medium text-ink-muted"
+                }`}
+              >
+                {hasPrice ? formatPrice(product.price) : "No disponible"}
               </p>
             </div>
-            {(product.pricePosition || 0) <= -5 && (
+            {hasPrice && (product.pricePosition || 0) <= -5 && (
               <p className="pb-1 text-[10.5px] font-medium text-success">
                 {Math.abs(product.pricePosition)} % bajo la mediana
               </p>
@@ -135,7 +141,7 @@ export default function ProductCard({ product, award, awardTone = "editor", clas
               className="flex-1"
               onClick={() => trackAffiliateClick(product, "tarjeta")}
             >
-              Ver precio
+              {hasPrice ? "Ver precio" : "Ver en Amazon"}
             </Button>
           </div>
         </div>

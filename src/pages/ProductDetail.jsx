@@ -42,6 +42,7 @@ import {
 } from "../lib/normalize-product";
 import { priceBandLabel } from "../lib/site";
 import { formatCompact, formatDate, formatPrice } from "../lib/format";
+import { isAvailablePrice, isPriceStale, priceAgeDays } from "../lib/price-guard";
 import { trackAffiliateClick } from "../lib/analytics";
 import { breadcrumbSchema, productSchema, useSEO } from "../lib/seo";
 
@@ -62,6 +63,9 @@ export default function ProductDetail() {
 
   const product = products.find((item) => item.id === id || item.asin === id);
   const selected = product ? isSelected(product.id) : false;
+  const hasPrice = product ? isAvailablePrice(product.price) : false;
+  const stalePrice = product ? isPriceStale(product.updatedAt) : false;
+  const priceAge = product ? priceAgeDays(product.updatedAt) : null;
 
   useEffect(() => {
     setActiveTab("resumen");
@@ -94,7 +98,11 @@ export default function ProductDetail() {
       ? `${product.shortName || product.name} — análisis y precio`
       : "Patinete no encontrado",
     description: product
-      ? `${product.shortName || product.name}: análisis, especificaciones, pros y contras. Puntuación editorial ${product.editorScore}/10. Precio orientativo ${formatPrice(product.price)}.`
+      ? `${product.shortName || product.name}: análisis, especificaciones, pros y contras. Puntuación editorial ${product.editorScore}/10. ${
+          hasPrice
+            ? `Precio orientativo ${formatPrice(product.price)}.`
+            : "Consulta disponibilidad y precio actual en Amazon."
+        }`
       : "El patinete que buscas no está en el catálogo.",
     path: `/producto/${id}`,
     image: product?.image?.src,
@@ -178,10 +186,11 @@ export default function ProductDetail() {
     },
   ];
 
+  const pricePosition = hasPrice
+    ? `en la franja ${priceBandLabel(product.price).toLowerCase()}`
+    : "sin un precio fiable ahora mismo";
   const summaryParagraphs = [
-    `${product.brand} sitúa este ${product.model || product.shortName} en la franja ${priceBandLabel(
-      product.price
-    ).toLowerCase()}. ${
+    `${product.brand} sitúa este ${product.model || product.shortName} ${pricePosition}. ${
       suspension
         ? "Incluye suspensión, así que el asfalto irregular se nota menos en trayectos largos."
         : "Renuncia a la suspensión para contener peso y precio; el confort depende del tamaño de rueda y de la presión de los neumáticos."
@@ -609,38 +618,59 @@ export default function ProductDetail() {
               </div>
 
               {product.updatedAt && (
-                <p className="mt-2 text-[11px] leading-relaxed text-ink-muted">
-                  Ficha revisada el {formatDate(product.updatedAt)}. El precio es orientativo:
-                  confirma el importe final en Amazon.
+                <p
+                  className={`mt-2 text-[11px] leading-relaxed ${
+                    stalePrice ? "font-medium text-copper" : "text-ink-muted"
+                  }`}
+                >
+                  {stalePrice
+                    ? `El precio se revisó hace ${priceAge} días y puede haber cambiado. Confírmalo en Amazon.`
+                    : hasPrice
+                      ? `Precio y ficha revisados el ${formatDate(product.updatedAt)}. El precio es orientativo: confirma el importe final en Amazon.`
+                      : `Ficha revisada el ${formatDate(product.updatedAt)}. El precio se consulta en Amazon.`}
                 </p>
               )}
 
               <div className="mt-5 border-t border-line pt-5">
-                <div className="flex items-baseline gap-2">
-                  <span className="text-[34px] font-semibold leading-none tabular tracking-[-0.03em] text-ink">
-                    {formatPrice(product.price)}
-                  </span>
-                  <span className="text-[11px] text-ink-muted">orientativo</span>
-                </div>
-                <p className="mt-2 text-[12px] leading-relaxed text-ink-muted">
-                  {product.pricePosition < -3 ? (
-                    <>
-                      <span className="font-semibold text-success">
-                        {Math.abs(product.pricePosition)} % por debajo
-                      </span>{" "}
-                      del precio mediano del catálogo.
-                    </>
-                  ) : product.pricePosition > 3 ? (
-                    <>
-                      <span className="font-semibold text-ink">
-                        {product.pricePosition} % por encima
-                      </span>{" "}
-                      del precio mediano del catálogo.
-                    </>
-                  ) : (
-                    "En línea con el precio mediano del catálogo."
-                  )}
-                </p>
+                {hasPrice ? (
+                  <>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-[34px] font-semibold leading-none tabular tracking-[-0.03em] text-ink">
+                        {formatPrice(product.price)}
+                      </span>
+                      <span className="text-[11px] text-ink-muted">orientativo</span>
+                    </div>
+                    <p className="mt-2 text-[12px] leading-relaxed text-ink-muted">
+                      {product.pricePosition < -3 ? (
+                        <>
+                          <span className="font-semibold text-success">
+                            {Math.abs(product.pricePosition)} % por debajo
+                          </span>{" "}
+                          del precio mediano del catálogo.
+                        </>
+                      ) : product.pricePosition > 3 ? (
+                        <>
+                          <span className="font-semibold text-ink">
+                            {product.pricePosition} % por encima
+                          </span>{" "}
+                          del precio mediano del catálogo.
+                        </>
+                      ) : (
+                        "En línea con el precio mediano del catálogo."
+                      )}
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-[20px] font-semibold leading-snug text-ink">
+                      Precio no disponible
+                    </p>
+                    <p className="mt-2 text-[12px] leading-relaxed text-ink-muted">
+                      Amazon no está mostrando un precio fiable para este modelo ahora mismo.
+                      Ábrelo para ver el importe y la disponibilidad actuales.
+                    </p>
+                  </>
+                )}
               </div>
 
               <div className="mt-5 space-y-2.5">
@@ -650,7 +680,7 @@ export default function ProductDetail() {
                   fullWidth
                   onClick={() => trackAffiliateClick(product, "ficha_compra")}
                 >
-                  Ver precio en Amazon
+                  {hasPrice ? "Ver precio en Amazon" : "Ver disponibilidad en Amazon"}
                   <ArrowUpRight className="h-4 w-4" />
                 </Button>
                 <Button
@@ -715,9 +745,15 @@ export default function ProductDetail() {
         <div className="flex items-center justify-between gap-3">
           <div>
             <p className="text-[9.5px] font-semibold uppercase tracking-[0.12em] text-ink-muted">
-              Precio orientativo
+              {hasPrice ? "Precio orientativo" : "Precio"}
             </p>
-            <p className="text-xl font-semibold tabular text-ink">{formatPrice(product.price)}</p>
+            <p
+              className={`tabular text-ink ${
+                hasPrice ? "text-xl font-semibold" : "text-[13px] font-medium text-ink-muted"
+              }`}
+            >
+              {hasPrice ? formatPrice(product.price) : "No disponible"}
+            </p>
           </div>
           <div className="flex items-center gap-2">
             <button

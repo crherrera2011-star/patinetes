@@ -17,6 +17,7 @@
     "scrape:sql": "node scripts/scrape-catalogo.mjs --input datos/patinetes.xlsx --config niche.config.mjs --sql",
     "scrape:push": "node scripts/scrape-catalogo.mjs --input datos/patinetes.xlsx --config niche.config.mjs --push",
     "verify": "node scripts/verificar-catalogo.mjs --input datos/productos.json --config niche.config.mjs",
+    "verify:links": "node scripts/verificar-enlaces.mjs",
     "catalogo:update": "node scripts/actualizar-catalogo.mjs --scrape",
     "catalogo:dry-run": "node scripts/actualizar-catalogo.mjs --scrape --dry-run",
     "catalogo:test": "node scripts/actualizar-catalogo.mjs --scrape --offline --limit 2",

@@ -33,32 +33,37 @@ export default function Offers() {
   const { products, loading, error, reload, lastUpdated } = useCatalog();
   const [sort, setSort] = useState("desviacion");
 
+  // Una ficha sin precio no puede compararse con la mediana ni entrar en una
+  // franja de presupuesto: se queda en el catálogo, pero no en esta página.
+  const available = useMemo(() => products.filter((product) => product.price > 0), [products]);
+  const unavailable = products.length - available.length;
+
   const medianPrice = useMemo(
-    () => median(products.map((product) => product.price).filter(Boolean)),
-    [products]
+    () => median(available.map((product) => product.price)),
+    [available]
   );
   const belowMedian = useMemo(
     () =>
-      products
+      available
         .filter((product) => product.pricePosition <= -5)
         .sort((a, b) => a.pricePosition - b.pricePosition),
-    [products]
+    [available]
   );
 
   const bestByBand = useMemo(
     () =>
       PRICE_BANDS.map((band) => {
-        const inBand = products.filter((product) => inPriceBand(product.price, band));
+        const inBand = available.filter((product) => inPriceBand(product.price, band));
         return {
           band,
           product: [...inBand].sort((a, b) => b.editorScore - a.editorScore)[0],
         };
       }).filter((entry) => entry.product),
-    [products]
+    [available]
   );
 
   const rows = useMemo(() => {
-    const list = [...products];
+    const list = [...available];
     switch (sort) {
       case "precio-asc":
         return list.sort((a, b) => a.price - b.price);
@@ -67,7 +72,7 @@ export default function Offers() {
       default:
         return list.sort((a, b) => a.pricePosition - b.pricePosition);
     }
-  }, [products, sort]);
+  }, [available, sort]);
 
   useSEO({
     title: "Precios de patinetes eléctricos",
@@ -118,12 +123,14 @@ export default function Offers() {
                   icon: Scale,
                   label: "Precio mediano",
                   value: formatPrice(medianPrice),
-                  hint: `${products.length} modelos`,
+                  hint: `${available.length} modelos con precio`,
                 },
                 {
                   icon: Wallet,
                   label: "Desde",
-                  value: formatPrice(Math.min(...products.map((product) => product.price))),
+                  value: available.length
+                    ? formatPrice(Math.min(...available.map((product) => product.price)))
+                    : "—",
                   hint: "La opción más ajustada",
                 },
                 {
@@ -149,6 +156,17 @@ export default function Offers() {
                 </div>
               ))}
             </dl>
+
+            {unavailable > 0 && (
+              <p className="mt-4 text-[12px] leading-relaxed text-ink-muted">
+                {unavailable} {unavailable === 1 ? "modelo no muestra" : "modelos no muestran"} un
+                precio fiable ahora mismo. Siguen en el{" "}
+                <Link to="/patinetes" className="text-brand hover:text-brand-dark">
+                  catálogo completo
+                </Link>{" "}
+                con su ficha y su enlace a Amazon.
+              </p>
+            )}
 
             {/* Below median */}
             <section className="mt-14">
