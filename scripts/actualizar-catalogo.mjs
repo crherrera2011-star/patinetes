@@ -51,6 +51,9 @@ const LOCAL_SNAPSHOT = path.join(DATA_DIR, "productos.json");
 // Snapshot aislado de esta ejecución: solo contiene lo scrapeado ahora.
 const SCRAPE_DIR = path.join(DATA_DIR, "scrape-semanal");
 const SCRAPE_SNAPSHOT = path.join(SCRAPE_DIR, "productos.json");
+// Overrides manuales por ASIN: specs verificadas y textos editoriales que no
+// deben ser sobrescritos por la inferencia del scraper.
+const OVERRIDES_FILE = path.join(DATA_DIR, "product-overrides.json");
 
 const MIN_PRODUCTS_DEFAULT = 8;
 const RPC = "replace_products";
@@ -62,6 +65,17 @@ function log(level, message) {
   const line = `[${new Date().toISOString()}] [${level}] ${message}`;
   console.log(line);
   logLines.push(line);
+}
+
+async function loadOverrides() {
+  if (!existsSync(OVERRIDES_FILE)) return {};
+  try {
+    const raw = JSON.parse(await fs.readFile(OVERRIDES_FILE, "utf8"));
+    return raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
+  } catch (error) {
+    log("warn", `No se pudo leer ${OVERRIDES_FILE}: ${error.message}`);
+    return {};
+  }
 }
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -383,7 +397,7 @@ function pickScore(primary, fallback) {
   return scoreValue(fallback);
 }
 
-function mergeRow({ baseline, scraped, url, asin, tag, domain, scoreColumns, now }) {
+function mergeRow({ baseline, scraped, url, asin, tag, domain, scoreColumns, now, overrides }) {
   if (!asin) {
     log("warn", `No se pudo identificar el ASIN de ${url}; se omite.`);
     return null;
@@ -425,6 +439,12 @@ function mergeRow({ baseline, scraped, url, asin, tag, domain, scoreColumns, now
     );
   }
   const slugBase = slugify(name).slice(0, 70);
+  const override =
+    overrides?.[asin] && typeof overrides[asin] === "object" ? overrides[asin] : {};
+  const overrideSpecs =
+    override.specifications && typeof override.specifications === "object"
+      ? override.specifications
+      : {};
 
   const row = {
     id: asin,
@@ -448,23 +468,33 @@ function mergeRow({ baseline, scraped, url, asin, tag, domain, scoreColumns, now
           ? baseline.gallery
           : [],
     affiliate_url: affiliateUrl,
-    // Los bullets de Amazon se refrescan; si el scrape no los trae, se conservan.
+    // Los textos del override mandan; después se conserva lo que ya había y,
+    // si no hay nada, se usan los bullets del scrape.
     pros:
-      Array.isArray(scraped?.pros) && scraped.pros.length
-        ? scraped.pros
-        : Array.isArray(baseline?.pros)
-          ? baseline.pros
-          : [],
+      Array.isArray(override.pros) && override.pros.length
+        ? override.pros
+        : Array.isArray(scraped?.pros) && scraped.pros.length
+          ? scraped.pros
+          : Array.isArray(baseline?.pros)
+            ? baseline.pros
+            : [],
     cons:
-      Array.isArray(scraped?.cons) && scraped.cons.length
-        ? scraped.cons
-        : Array.isArray(baseline?.cons)
-          ? baseline.cons
-          : [],
-    tags: Array.isArray(baseline?.tags) ? baseline.tags : [],
-    ideal_for: clean(baseline?.ideal_for),
+      Array.isArray(override.cons) && override.cons.length
+        ? override.cons
+        : Array.isArray(scraped?.cons) && scraped.cons.length
+          ? scraped.cons
+          : Array.isArray(baseline?.cons)
+            ? baseline.cons
+            : [],
+    tags: Array.isArray(override.tags)
+      ? override.tags
+      : Array.isArray(baseline?.tags)
+        ? baseline.tags
+        : [],
+    ideal_for: clean(override.ideal_for) || clean(baseline?.ideal_for),
     reviews_summary: baseline?.reviews_summary || {},
     // Las specs nuevas ganan, pero no se pierden las que Amazon deje de publicar.
+    // Las specs del override son el último filtro: dato verificado a mano.
     specifications: {
       ...(baseline?.specifications && typeof baseline.specifications === "object"
         ? baseline.specifications
@@ -472,9 +502,10 @@ function mergeRow({ baseline, scraped, url, asin, tag, domain, scoreColumns, now
       ...(scraped?.specifications && typeof scraped.specifications === "object"
         ? scraped.specifications
         : {}),
+      ...overrideSpecs,
     },
-    badge: clean(baseline?.badge),
-    badge_color: clean(baseline?.badge_color),
+    badge: clean(override.badge) || clean(baseline?.badge),
+    badge_color: clean(override.badge_color) || clean(baseline?.badge_color),
     created_at: baseline?.created_at || now,
     updated_at: now,
   };
@@ -611,6 +642,11 @@ async function main() {
     ? (await import(`${pathToFileURL(configPath).href}?t=${Date.now()}`)).default
     : {};
   const table = config.table || "products";
+  const overrides = await loadOverrides();
+  const overrideCount = Object.keys(overrides).length;
+  if (overrideCount) {
+    log("info", `Overrides manuales: ${overrideCount} producto(s).`);
+  }
   const domain = clean(config.site?.amazonDomain || "www.amazon.es")
     .replace(/^https?:\/\//i, "")
     .replace(/\/.*$/, "")
@@ -729,6 +765,7 @@ async function main() {
       domain,
       scoreColumns,
       now,
+      overrides,
     });
     if (!row) continue;
     if (seen.has(row.id)) {

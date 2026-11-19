@@ -68,6 +68,7 @@ function loadEnvFile() {
 const args = parseArgs(process.argv.slice(2));
 const inputPath = path.resolve(String(args.input || "datos/urls.xlsx"));
 const configPath = path.resolve(String(args.config || "niche.config.mjs"));
+const overridesPath = path.resolve(String(args.overrides || "datos/product-overrides.json"));
 const push = Boolean(args.push);
 const dryRun = Boolean(args["dry-run"]);
 const makeSql = Boolean(args.sql);
@@ -156,6 +157,22 @@ async function loadConfig() {
   }
   const module = await import(`${pathToFileURL(configPath).href}?t=${Date.now()}`);
   return module.default || module.config;
+}
+
+/**
+ * Specs verificadas a mano para productos donde la ficha de Amazon confunde al
+ * scraper (por ejemplo, autonomía o batería inferidas de un texto ambiguo).
+ * Se aplican al final: el dato manual siempre gana. El archivo es opcional.
+ */
+function loadSpecOverrides(file) {
+  if (!fs.existsSync(file)) return {};
+  try {
+    const raw = JSON.parse(fs.readFileSync(file, "utf8"));
+    return raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
+  } catch (error) {
+    console.warn(`No se pudo leer ${file}: ${error.message}`);
+    return {};
+  }
 }
 
 function buildAliasMap(config) {
@@ -450,7 +467,7 @@ export function readUrls(file) {
     .filter((value) => /^https?:\/\//i.test(value));
 }
 
-async function scrapeProduct(page, url, aliasMap, amazonTag, host, config) {
+async function scrapeProduct(page, url, aliasMap, amazonTag, host, config, specOverrides = {}) {
   const debug = process.env.SCRAPE_DEBUG === "1";
   if (debug) console.log("  · goto");
   await page.goto(url, { waitUntil: "domcontentloaded", timeout: 60000 });
@@ -678,15 +695,20 @@ async function scrapeProduct(page, url, aliasMap, amazonTag, host, config) {
     }
   }
 
+  const asin = extractAsin(url);
+  if (!asin) throw new Error(`No se pudo extraer el ASIN de ${url}`);
+
   // Título + bullets + tabla: ahí viven autonomía, potencia, peso y frenos.
   const inferred = inferSpecsFromText(
     [raw.title, ...raw.bullets, ...Object.values(raw.specs)].join(" · "),
     config
   );
-  const specifications = { ...inferred, ...structured };
-
-  const asin = extractAsin(url);
-  if (!asin) throw new Error(`No se pudo extraer el ASIN de ${url}`);
+  const override = specOverrides[asin]?.specifications;
+  const specifications = {
+    ...inferred,
+    ...structured,
+    ...(override && typeof override === "object" ? override : {}),
+  };
   if (debug) console.log("  · specs built");
   const tag = amazonTag ? `?tag=${encodeURIComponent(amazonTag)}&linkCode=ll1` : "";
 
@@ -818,6 +840,11 @@ async function main() {
   const host = domain.startsWith("www.") ? domain : `www.${domain}`;
   const amazonTag = config.site?.amazonTag || process.env.VITE_AMAZON_TAG || "";
   const aliasMap = buildAliasMap(config);
+  const specOverrides = loadSpecOverrides(overridesPath);
+  const overrideCount = Object.keys(specOverrides).length;
+  if (overrideCount) {
+    console.log(`🔧 ${overrideCount} override(s) de producto: ${path.basename(overridesPath)}`);
+  }
   const scoreColumns = (config.scores || []).map((score) => slugKey(score.key));
 
   if (!fs.existsSync(inputPath)) {
@@ -916,7 +943,15 @@ async function main() {
       let lastError = null;
       for (let attempt = 1; attempt <= 2 && !product; attempt += 1) {
         try {
-          product = await scrapeProduct(page, url, aliasMap, amazonTag, host, config);
+          product = await scrapeProduct(
+            page,
+            url,
+            aliasMap,
+            amazonTag,
+            host,
+            config,
+            specOverrides
+          );
         } catch (error) {
           lastError = error;
           console.warn(`  intento ${attempt} fallido: ${error.message}`);

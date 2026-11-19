@@ -1,0 +1,35 @@
+{
+  "B0GJ5HKWWP": {
+    "source": "https://kukirinmobility.com/es/products/kukirin-g2-master-electric-scooter",
+    "note": "Especificaciones y textos verificados a mano. Amazon infiere mal la autonomía (50 km) y la batería (50 Wh), y no publica motor ni velocidad en la tabla técnica.",
+    "specifications": {
+      "autonomia_km": 70,
+      "velocidad_max_kmh": 60,
+      "motor_w": 2000,
+      "bateria_wh": 1081.6,
+      "peso_kg": 33.1,
+      "ruedas_pulgadas": 10,
+      "frenos": "Doble disco + corte electrónico",
+      "suspension": true,
+      "plegable": true,
+      "luces": true,
+      "carga_max_kg": 120,
+      "tiempo_carga_h": 8,
+      "resistencia_ip": "IP54"
+    },
+    "pros": [
+      "Doble motor de 2×1000 W (2.000 W nominales) con tracción total para subir pendientes y cargar con soltura.",
+      "Batería de 52 V y 20,8 Ah (1.081,6 Wh): hasta 70 km de autonomía declarada por el fabricante.",
+      "Suspensión hidráulica delantera y trasera, neumáticos de 10″ y frenos de disco doble con corte de potencia.",
+      "Pantalla LCD, luces LED con intermitentes, manillar ajustable y chasis plegable de aluminio.",
+      "Protección IP54 y construcción en aluminio para un uso exigente en terrenos offroad."
+    ],
+    "cons": [
+      "No está homologado para circular por vía pública: la ficha lo destina a propiedades privadas y zonas offroad. A 60 km/h supera el límite urbano de 25 km/h.",
+      "Pesa 33,1 kg según el fabricante (Amazon declara 31 kg): poco práctico para escaleras o transporte público.",
+      "Los 70 km de autonomía son el dato declarado; con peso, frío o velocidad alta la cifra real será menor."
+    ],
+    "ideal_for": "Uso privado y offroad: trayectos largos, pendientes y terrenos exigentes. No es una opción para circular por ciudad si buscas un patinete homologado.",
+    "tags": ["doble motor", "offroad"]
+  }
+}

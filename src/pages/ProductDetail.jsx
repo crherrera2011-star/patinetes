@@ -189,6 +189,10 @@ export default function ProductDetail() {
   const pricePosition = hasPrice
     ? `en la franja ${priceBandLabel(product.price).toLowerCase()}`
     : "sin un precio fiable ahora mismo";
+  const formatMetric = (value) =>
+    value === null || value === undefined || value === ""
+      ? ""
+      : Number(value).toLocaleString("es-ES", { maximumFractionDigits: 1 });
   const summaryParagraphs = [
     `${product.brand} sitúa este ${product.model || product.shortName} ${pricePosition}. ${
       suspension
@@ -196,12 +200,14 @@ export default function ProductDetail() {
         : "Renuncia a la suspensión para contener peso y precio; el confort depende del tamaño de rueda y de la presión de los neumáticos."
     }`,
     [
-      autonomy ? `Anuncia ${autonomy} km de autonomía, que en uso real suele quedarse en torno al 60–70 %.` : "",
-      speed ? `Su velocidad máxima declarada es de ${speed} km/h.` : "",
-      motor ? `El motor es de ${motor} W.` : "",
-      weight ? `Pesa ${weight} kg.` : "",
-      battery ? `La batería es de ${battery} Wh.` : "",
-      charge ? `La carga completa tarda unas ${charge} h.` : "",
+      autonomy
+        ? `Anuncia ${formatMetric(autonomy)} km de autonomía, que en uso real suele quedarse en torno al 60–70 %.`
+        : "",
+      speed ? `Su velocidad máxima declarada es de ${formatMetric(speed)} km/h.` : "",
+      motor ? `El motor es de ${formatMetric(motor)} W.` : "",
+      weight ? `Pesa ${formatMetric(weight)} kg.` : "",
+      battery ? `La batería es de ${formatMetric(battery)} Wh.` : "",
+      charge ? `La carga completa tarda unas ${formatMetric(charge)} h.` : "",
     ]
       .filter(Boolean)
       .join(" "),
